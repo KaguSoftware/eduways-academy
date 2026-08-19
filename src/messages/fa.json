@@ -210,7 +210,8 @@
     "duration": "مدت",
     "tuition": "شهریه سالانه",
     "maxTuition": "حداکثر شهریه",
-    "viewUniversity": "مشاهده دانشگاه"
+    "viewUniversity": "مشاهده دانشگاه",
+    "suggestions": "پیشنهادها"
   },
   "rankings": {
     "title": "رتبه‌بندی دانشگاه‌ها",
