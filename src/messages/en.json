@@ -221,6 +221,8 @@
     "public": "Best public universities",
     "private": "Best private universities",
     "byField": "By field",
+    "byFieldHint": "Pick a field to see the best Istanbul universities for it.",
+    "byFieldPlaceholder": "Choose a field",
     "sourceNote": "Sources: URAP, THE and QS (latest available year per university). Eduways score is our editorial assessment, updated yearly.",
     "methodology": "How we rank",
     "methodologyBody": "We take the best available national rank from URAP, THE and QS and combine it with tuition to compute a value score, then layer our editorial score based on admissions experience, English support and student services. Sources are linked so you can verify.",
