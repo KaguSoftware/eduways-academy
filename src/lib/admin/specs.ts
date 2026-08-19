@@ -4,7 +4,7 @@
  */
 import type { I18nText } from "@/lib/utils";
 
-export type FieldType = "text" | "i18n" | "i18n-long" | "i18n-md" | "number" | "boolean" | "select" | "date" | "tags" | "json";
+export type FieldType = "text" | "i18n" | "i18n-long" | "i18n-md" | "i18n-list" | "number" | "boolean" | "select" | "date" | "tags" | "json";
 
 export interface FieldSpec {
   key: string;
@@ -41,7 +41,7 @@ const LANGS = [{ value: "tr", label: L("ترکی", "Turkish") }, { value: "en", 
 export const TABLES: Record<string, TableSpec> = {
   universities: {
     table: "universities", label: L("دانشگاه‌ها", "Universities"), singular: L("دانشگاه", "University"), idField: "id", titleField: "name", idPrefix: "uni-",
-    listFields: ["type", "avg_tuition_min", "avg_tuition_max", "editorial_score", "is_featured", "status"], orderBy: "editorial_score", canCreate: true,
+    listFields: ["type", "avg_tuition_min", "avg_tuition_max", "is_featured", "status"], orderBy: "editorial_score", canCreate: true,
     fields: [
       f("id", "شناسه", "ID", "text", { required: true, help: L("مثلاً uni-koc-university", "e.g. uni-koc-university"), section: "basic" }),
       f("slug", "اسلاگ (آدرس)", "Slug", "text", { required: true, section: "basic" }),
@@ -52,7 +52,7 @@ export const TABLES: Record<string, TableSpec> = {
       f("status", "وضعیت", "Status", "select", { options: STATUS, section: "basic" }),
       f("is_featured", "منتخب", "Featured", "boolean", { section: "basic" }),
       f("description", "معرفی", "Description", "i18n-long", { section: "content" }),
-      f("highlights", "نکات برجسته", "Highlights", "json", { help: L("آرایه JSON از {fa, en}", "JSON array of {fa, en}"), section: "content" }),
+      f("highlights", "نکات برجسته", "Highlights", "i18n-list", { help: L("هر نکته در یک خط", "One highlight per line"), section: "content" }),
       f("website", "وب‌سایت", "Website", "text", { section: "content" }),
       f("logo_url", "آدرس لوگو", "Logo URL", "text", { section: "content" }),
       f("cover_url", "آدرس تصویر کاور", "Cover URL", "text", { section: "content" }),
@@ -60,7 +60,6 @@ export const TABLES: Record<string, TableSpec> = {
       f("avg_tuition_min", "حداقل شهریه (دلار)", "Tuition min (USD)", "number", { section: "numbers" }),
       f("avg_tuition_max", "حداکثر شهریه (دلار)", "Tuition max (USD)", "number", { section: "numbers" }),
       f("eduways_discount_pct", "درصد تخفیف ادیوویز", "Eduways discount %", "number", { section: "numbers" }),
-      f("editorial_score", "امتیاز ادیوویز (۰–۱۰۰)", "Eduways score (0–100)", "number", { section: "numbers" }),
       f("founded", "سال تأسیس", "Founded", "number", { section: "numbers" }),
       f("student_count", "تعداد دانشجو", "Students", "number", { section: "numbers" }),
       f("intl_student_pct", "درصد دانشجوی بین‌المللی", "International %", "number", { section: "numbers" }),
@@ -121,7 +120,7 @@ export const TABLES: Record<string, TableSpec> = {
       f("name", "نام", "Name", "i18n", { required: true, section: "basic" }),
       f("side", "سمت", "Side", "select", { options: [{ value: "european", label: L("اروپایی", "European") }, { value: "asian", label: L("آسیایی", "Asian") }], section: "basic" }),
       f("description", "توضیحات", "Description", "i18n-long", { section: "content" }),
-      f("highlights", "نکات برجسته", "Highlights", "json", { help: L("آرایه JSON از {fa, en}", "JSON array of {fa, en}"), section: "content" }),
+      f("highlights", "نکات برجسته", "Highlights", "i18n-list", { help: L("هر نکته در یک خط", "One highlight per line"), section: "content" }),
       f("avg_rent_usd", "میانگین اجاره (دلار/ماه)", "Avg rent (USD/month)", "number", { section: "numbers" }),
       f("lat", "عرض جغرافیایی", "Latitude", "number", { section: "meta" }),
       f("lng", "طول جغرافیایی", "Longitude", "number", { section: "meta" }),

@@ -51,11 +51,14 @@ export function toEnglishDigits(s: string) {
 
 export function slugify(s: string) {
   return s
+    .replace(/[ıİ]/g, "i")
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[^\w\s-]/g, "")
     .trim()
-    .replace(/[\s_]+/g, "-");
+    .replace(/[\s_]+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 export const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
