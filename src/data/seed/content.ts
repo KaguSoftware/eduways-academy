@@ -1,0 +1,172 @@
+import type { Service, Story, Post, Faq, SiteSettings } from "@/lib/types";
+
+/* ───────────────────────────── SERVICES ───────────────────────────── */
+const svc = (
+  slug: string, icon: string, order: number,
+  title: [string, string], summary: [string, string], body: [string, string],
+  steps: [string, string, string, string][], price: [string, string] | null = null,
+): Service => ({
+  id: `svc-${slug}`, slug, icon, order,
+  title: { fa: title[0], en: title[1] },
+  summary: { fa: summary[0], en: summary[1] },
+  body: { fa: body[0], en: body[1] },
+  steps: steps.map(([tfa, ten, bfa, ben]) => ({ title: { fa: tfa, en: ten }, body: { fa: bfa, en: ben } })),
+  price_note: price ? { fa: price[0], en: price[1] } : null,
+});
+
+export const services: Service[] = [
+  svc("university-admission", "GraduationCap", 1,
+    ["پذیرش دانشگاه", "University admission"],
+    ["انتخاب دانشگاه، آماده‌سازی مدارک و ثبت درخواست تا دریافت نامه پذیرش.", "University selection, document prep and application filing until your acceptance letter."],
+    ["ما با معدل، بودجه و هدف شما شروع می‌کنیم، فهرست کوتاهی از دانشگاه‌هایی می‌سازیم که واقعاً پذیرش می‌گیرید، مدارک را ترجمه و تأیید می‌کنیم و درخواست را از طرف شما ثبت و پیگیری می‌کنیم. برای دانشگاه‌های دولتی، برای آزمون YÖS هم آماده‌تان می‌کنیم.",
+     "We start from your GPA, budget and goals, build a shortlist of universities where you will actually be accepted, translate and attest your documents, then file and track the application on your behalf. For public universities we also prepare you for the YÖS exam."],
+    [["مشاوره و ارزیابی", "Consultation & assessment", "جلسه رایگان و ارزیابی شانس پذیرش", "Free call and a realistic admission assessment"],
+     ["فهرست کوتاه", "Shortlist", "۳–۵ دانشگاه با هزینه و احتمال پذیرش", "3–5 universities with cost and acceptance odds"],
+     ["مدارک", "Documents", "ترجمه، نوتر و دنکلیک", "Translation, notary and denklik"],
+     ["ثبت و پیگیری", "File & track", "ثبت درخواست، پیگیری و دریافت پذیرش", "Filing, follow-up and acceptance letter"]],
+    ["مشاوره رایگان · هزینه خدمات پس از پذیرش قطعی", "Free consultation · service fee after confirmed acceptance"]),
+  svc("scholarships-discounts", "BadgePercent", 2,
+    ["تخفیف شهریه و بورسیه", "Tuition discounts & scholarships"],
+    ["قراردادهای مستقیم با دانشگاه‌ها: تا ۷۵٪ تخفیف روی قیمت رسمی.", "Direct agreements with universities: up to 75% off list tuition."],
+    ["بسیاری از دانشگاه‌های خصوصی استانبول قیمت رسمی را روی سایت می‌نویسند اما به نمایندگان رسمی تخفیف می‌دهند. ادیوویز با ده‌ها دانشگاه قرارداد دارد و این تخفیف را مستقیماً به شما منتقل می‌کند. برای بورسیه دولتی ترکیه و بورسیه‌های شایستگی هم پرونده‌تان را آماده می‌کنیم.",
+     "Many private universities in Istanbul publish list prices but give discounts to official representatives. Eduways holds agreements with dozens of universities and passes that discount straight to you. We also prepare files for Türkiye Scholarships and merit awards."],
+    [["بررسی واجد شرایط بودن", "Eligibility check", "معدل، آزمون‌ها و بودجه", "GPA, exams, budget"],
+     ["درخواست تخفیف", "Negotiation", "درخواست رسمی تخفیف از دانشگاه", "Formal discount request to the university"],
+     ["تأیید کتبی", "Written confirmation", "تخفیف در نامه پذیرش درج می‌شود", "Discount written into your acceptance letter"]],
+    ["رایگان برای دانشجویان ادیوویز", "Free for Eduways students"]),
+  svc("student-visa", "StampIcon", 3,
+    ["ویزای تحصیلی", "Student visa"],
+    ["آماده‌سازی مدارک ویزا، وقت سفارت و پیگیری تا صدور.", "Visa paperwork, consulate appointment and follow-up until issuance."],
+    ["با نامه پذیرش نهایی، پرونده ویزای تحصیلی را آماده می‌کنیم: فرم، بیمه، رزرو اقامت، تمکن مالی، ترجمه‌ها. وقت سفارت می‌گیریم و برای مصاحبه راهنمایی‌تان می‌کنیم.",
+     "With the final acceptance letter we prepare the student visa file: form, insurance, accommodation booking, proof of funds, translations. We book the consulate appointment and coach you for the interview."],
+    [["چک‌لیست", "Checklist", "فهرست دقیق مدارک بر اساس کشور شما", "Exact document list for your country"],
+     ["وقت سفارت", "Appointment", "رزرو وقت و آماده‌سازی پرونده", "Booking and file preparation"],
+     ["پیگیری", "Follow-up", "تا صدور ویزا", "Until the visa is issued"]],
+    null),
+  svc("flights-airport", "Plane", 4,
+    ["بلیت و استقبال فرودگاهی", "Flights & airport pickup"],
+    ["بهترین بلیت با بار دانشجویی و استقبال در فرودگاه استانبول.", "Best fares with student baggage and pickup at Istanbul airport."],
+    ["بلیت را با بهترین قیمت و بار اضافه رزرو می‌کنیم و یکی از همکاران ما در فرودگاه منتظر شماست تا به محل اقامت برساندتان.",
+     "We book the best fare with extra baggage, and a team member meets you at the airport and takes you to your accommodation."],
+    [["رزرو", "Booking", "بلیت و بار دانشجویی", "Ticket + student baggage"], ["استقبال", "Pickup", "تابلو به نام شما در فرودگاه", "Name board at the airport"], ["انتقال", "Transfer", "تا درب خوابگاه/خانه", "To your dorm/flat door"]],
+    null),
+  svc("accommodation", "Home", 5,
+    ["خوابگاه و اسکان", "Accommodation"],
+    ["خوابگاه دانشگاه، خوابگاه خصوصی یا آپارتمان اشتراکی نزدیک پردیس.", "University dorm, private residence or shared flat near campus."],
+    ["بر اساس بودجه و پردیس، گزینه‌های امن و نزدیک را معرفی و رزرو می‌کنیم. قرارداد اجاره را بررسی می‌کنیم تا گرفتار مشکلات رایج نشوید.",
+     "Based on budget and campus we source and book safe, nearby options and review the lease so you avoid common pitfalls."],
+    [["نیازسنجی", "Needs", "بودجه، پردیس، هم‌اتاقی", "Budget, campus, roommates"], ["گزینه‌ها", "Options", "۳ گزینه با عکس و قیمت", "3 options with photos and prices"], ["رزرو", "Booking", "قرارداد و تحویل کلید", "Lease and key handover"]],
+    null),
+  svc("residence-permit", "IdCard", 6,
+    ["اقامت دانشجویی (کیملیک)", "Residence permit (ikamet)"],
+    ["ثبت درخواست اقامت، بیمه، آدرس و وقت اداره مهاجرت.", "Residence application, insurance, address registration and immigration appointment."],
+    ["ظرف ۳۰ روز بعد از ورود باید درخواست اقامت بدهید. ما فرم e-ikamet را پر می‌کنیم، بیمه را می‌گیریم، وقت اداره مهاجرت را رزرو می‌کنیم و همراهتان می‌آییم.",
+     "You must apply within 30 days of arrival. We complete the e-ikamet form, arrange insurance, book the immigration appointment and come with you."],
+    [["مدارک", "Documents", "بیمه، آدرس، عکس، پاسپورت", "Insurance, address, photos, passport"], ["وقت", "Appointment", "رزرو و همراهی", "Booking and accompaniment"], ["کارت", "Card", "پیگیری تا تحویل کارت", "Tracking until the card arrives"]],
+    null),
+  svc("settling-in", "MapPinned", 7,
+    ["استقرار در استانبول", "Settling in Istanbul"],
+    ["سیم‌کارت، حساب بانکی، کارت حمل‌ونقل، ثبت‌نام دانشگاه و راهنمای شهر.", "SIM card, bank account, transport card, university registration and a city orientation."],
+    ["در هفته اول با شما هستیم: ثبت‌نام نهایی دانشگاه، کارت دانشجویی، سیم‌کارت، حساب بانکی، کارت استانبول و معرفی محله.",
+     "We stay with you through the first week: final registration, student card, SIM, bank account, Istanbulkart and a neighbourhood walk-through."],
+    [["روز اول", "Day one", "ثبت‌نام و کارت دانشجویی", "Registration and student card"], ["هفته اول", "First week", "سیم‌کارت، بانک، حمل‌ونقل", "SIM, bank, transport"], ["همیشه", "Always", "پشتیبانی واتساپ", "WhatsApp support"]],
+    null),
+  svc("language-prep", "Languages", 8,
+    ["آمادگی زبان و YÖS", "Language & YÖS preparation"],
+    ["کلاس‌های TÖMER/ترکی، انگلیسی و آمادگی آزمون YÖS با مدرسان فارسی‌زبان.", "TÖMER/Turkish, English and YÖS prep with Persian-speaking instructors."],
+    ["برای دانشگاه‌های دولتی آزمون YÖS و برای برنامه‌های ترکی مدرک TÖMER لازم است. دوره‌های فشرده آنلاین و حضوری برگزار می‌کنیم.",
+     "Public universities need YÖS and Turkish programs need TÖMER. We run intensive online and in-person courses."],
+    [["تعیین سطح", "Placement", "آزمون سطح رایگان", "Free placement test"], ["دوره", "Course", "آنلاین یا حضوری در استانبول", "Online or in Istanbul"], ["آزمون", "Exam", "ثبت‌نام و همراهی در روز آزمون", "Registration and exam-day support"]],
+    null),
+];
+
+/* ───────────────────────────── STORIES ───────────────────────────── */
+export const stories: Story[] = [
+  { id: "story-1", slug: "sara-medipol-dentistry", student_name: "سارا م.", university_id: "uni-medipol-university", program: { fa: "دندانپزشکی (انگلیسی)", en: "Dentistry (English)" }, country: "IR", year_enrolled: 2024, published_at: "2024-10-02", photo_url: null,
+    quote: { fa: "فکر می‌کردم دندانپزشکی با این بودجه غیرممکنه. ادیوویز ۳۰٪ تخفیف گرفت و خوابگاه رو هم قبل از رسیدنم رزرو کرد.", en: "I thought dentistry was impossible on my budget. Eduways got 30% off and had my dorm booked before I landed." },
+    body: { fa: "سارا با معدل ۱۸.۲ از شیراز به ما پیام داد. در ۱۰ روز پذیرش مشروط مدیپول را گرفتیم، تخفیف را کتبی کردیم و پرونده ویزا آماده شد. سپتامبر ۲۰۲۴ ترم اول را شروع کرد.", en: "Sara messaged us from Shiraz with an 18.2 GPA. Within 10 days we had her conditional acceptance at Medipol, the discount in writing and her visa file ready. She started in September 2024." } },
+  { id: "story-2", slug: "amirhossein-itu-computer", student_name: "امیرحسین ک.", university_id: "uni-istanbul-technical-university", program: { fa: "مهندسی کامپیوتر", en: "Computer Engineering" }, country: "IR", year_enrolled: 2023, published_at: "2023-11-15", photo_url: null,
+    quote: { fa: "برای YÖS سه ماه با مدرس ادیوویز کار کردم و ۸۶ گرفتم. الان ITÜ با شهریه سالی ۴ هزار دلار.", en: "I studied three months for YÖS with an Eduways tutor and scored 86. Now ITU at $4k a year." },
+    body: { fa: "امیرحسین هدفش فقط دانشگاه دولتی بود. با برنامه آمادگی YÖS و ثبت‌نام در سه دانشگاه دولتی، ITÜ پذیرفته شد.", en: "Amirhossein only wanted a public university. With our YÖS program and applications to three public schools, ITU accepted him." } },
+  { id: "story-3", slug: "maryam-bau-architecture", student_name: "مریم ر.", university_id: "uni-bahcesehir-university", program: { fa: "معماری (انگلیسی)", en: "Architecture (English)" }, country: "AF", year_enrolled: 2024, published_at: "2024-09-20", photo_url: null,
+    quote: { fa: "از کابل همه‌چیز آنلاین انجام شد؛ حتی کیملیکم رو توی هفته اول گرفتم.", en: "Everything was done online from Kabul; I even got my residence card in the first week." },
+    body: { fa: "مریم با ۵۰٪ تخفیف در BAU پذیرفته شد و تیم ما در فرودگاه منتظرش بود.", en: "Maryam was admitted to BAU with a 50% discount and our team was waiting at the airport." } },
+  { id: "story-4", slug: "reza-koc-mba", student_name: "رضا ت.", university_id: "uni-koc-university", program: { fa: "MBA", en: "MBA" }, country: "IR", year_enrolled: 2023, published_at: "2023-12-01", photo_url: null,
+    quote: { fa: "انگیزه‌نامه و توصیه‌نامه‌ها رو با مشاور ادیوویز بازنویسی کردیم؛ کوچ با ۲۵٪ بورسیه پذیرفت.", en: "We rewrote my SOP and references with an Eduways advisor; Koç admitted me with a 25% scholarship." },
+    body: { fa: "پرونده تحصیلات تکمیلی رضا در ۴ هفته آماده و ارسال شد.", en: "Reza’s graduate file was ready and submitted within 4 weeks." } },
+  { id: "story-5", slug: "niloofar-aydin-nursing", student_name: "نیلوفر ه.", university_id: "uni-istanbul-aydin-university", program: { fa: "پرستاری (انگلیسی)", en: "Nursing (English)" }, country: "IR", year_enrolled: 2025, published_at: "2025-10-05", photo_url: null,
+    quote: { fa: "شهریه با تخفیف ادیوویز شد ۲۵۰۰ دلار. پدرم باورش نمی‌شد.", en: "With the Eduways discount tuition came to $2,500. My father could not believe it." },
+    body: { fa: "نیلوفر با بودجه محدود می‌خواست پرستاری انگلیسی بخواند. آیدین با ۵۰٪ تخفیف بهترین گزینه بود.", en: "Niloofar wanted English-taught nursing on a tight budget. Aydın with 50% off was the best fit." } },
+  { id: "story-6", slug: "farhad-sabanci-engineering", student_name: "فرهاد ن.", university_id: "uni-sabanci-university", program: { fa: "مهندسی (انتخاب رشته سال دوم)", en: "Engineering (major declared in year 2)" }, country: "TJ", year_enrolled: 2024, published_at: "2024-11-11", photo_url: null,
+    quote: { fa: "SAT 1420 داشتم و سابانجی ۱۰۰٪ بورسیه داد. ادیوویز فقط کمک کرد درست اقدام کنم.", en: "I had SAT 1420 and Sabancı gave 100%. Eduways made sure I applied right." },
+    body: { fa: "پرونده فرهاد دو هفته قبل از ددلاین کامل شد و بورسیه کامل گرفت.", en: "Farhad’s file was complete two weeks before the deadline and he got a full scholarship." } },
+];
+
+/* ───────────────────────────── POSTS ───────────────────────────── */
+export const posts: Post[] = [
+  {
+    id: "post-1", slug: "study-in-turkey-cost-2026", tags: ["costs", "istanbul"], author: "Eduways", published_at: "2026-07-10", reading_minutes: 7, cover_url: null,
+    title: { fa: "هزینه تحصیل و زندگی در استانبول ۲۰۲۶ (به دلار)", en: "Cost of studying and living in Istanbul in 2026 (in USD)" },
+    excerpt: { fa: "شهریه دولتی از ۱۰۰۰ دلار، خصوصی از ۳۰۰۰ دلار؛ اجاره، خوراک و حمل‌ونقل ماهانه چقدر می‌شود؟", en: "Public tuition from $1,000, private from $3,000; what do rent, food and transport cost per month?" },
+    body: { fa: "## شهریه\n\nدانشگاه‌های دولتی استانبول برای دانشجوی بین‌المللی بین **۱۰۰۰ تا ۹۰۰۰ دلار** در سال می‌گیرند (پزشکی گران‌ترین). دانشگاه‌های خصوصی از **۲۵۰۰ دلار** (مهندسی در دانشگاه‌های ارزان) تا **۳۵ هزار دلار** (پزشکی کوچ) متغیر است — اما با تخفیف نمایندگی معمولاً ۳۰ تا ۵۰٪ کمتر می‌پردازید.\n\n## اجاره\n\n- اتاق در خانه اشتراکی: ۲۰۰–۴۵۰ دلار\n- خوابگاه خصوصی: ۲۵۰–۵۰۰ دلار\n- سوئیت شخصی: ۵۰۰–۹۰۰ دلار\n\n## زندگی\n\nخوراک و حمل‌ونقل دانشجویی حدود ۲۵۰–۴۰۰ دلار در ماه. کارت حمل‌ونقل دانشجویی بسیار ارزان است.\n\n## جمع‌بندی\n\nیک دانشجوی مهندسی در دانشگاه خصوصی متوسط با تخفیف: حدود **۸ تا ۱۲ هزار دلار** در سال با همه هزینه‌ها. از [محاسبه‌گر هزینه](/calculator) استفاده کنید.", en: "## Tuition\n\nIstanbul’s public universities charge international students **$1,000–9,000** per year (medicine at the top). Private universities range from **$2,500** (engineering at budget schools) to **$35,000** (Koç medicine) — but with representative discounts you usually pay 30–50% less.\n\n## Rent\n\n- Room in a shared flat: $200–450\n- Private dorm: $250–500\n- Studio: $500–900\n\n## Living\n\nStudent food and transport run about $250–400 a month. The student transport card is very cheap.\n\n## Bottom line\n\nAn engineering student at a mid-range private university with a discount: roughly **$8–12k** per year all-in. Try the [cost calculator](/calculator)." },
+  },
+  {
+    id: "post-2", slug: "yos-exam-guide", tags: ["admission", "yos"], author: "Eduways", published_at: "2026-06-02", reading_minutes: 9, cover_url: null,
+    title: { fa: "راهنمای کامل آزمون YÖS برای ایرانی‌ها", en: "The complete YÖS guide for Iranian students" },
+    excerpt: { fa: "YÖS چیست، کدام دانشگاه‌ها می‌خواهند، چه نمره‌ای کافی است و چطور آماده شویم.", en: "What YÖS is, which universities require it, what score is enough and how to prepare." },
+    body: { fa: "## YÖS چیست؟\n\nآزمون ورودی دانشجویان خارجی برای دانشگاه‌های دولتی ترکیه؛ ۸۰ سؤال ریاضی، هندسه و هوش در ۱۰۰ دقیقه. از ۲۰۲۳ آزمون سراسری **TR-YÖS** توسط ÖSYM برگزار می‌شود و اکثر دولتی‌ها آن را می‌پذیرند؛ برخی (مثل دانشگاه استانبول) آزمون خودشان را هم دارند.\n\n## چه نمره‌ای لازم است؟\n\n- مهندسی ITÜ/YTÜ: ۷۰–۸۵\n- پزشکی دانشگاه استانبول: ۹۰+\n- رشته‌های علوم انسانی: ۵۰–۶۵\n\n## آمادگی\n\nدانش‌آموزان ایرانی به‌خاطر ریاضی قوی معمولاً در ۳–۴ ماه آماده می‌شوند. ادیوویز کلاس آنلاین با مدرس فارسی‌زبان دارد.\n\n## جایگزین‌ها\n\nSAT (1100+) را اغلب دولتی‌ها می‌پذیرند. دانشگاه‌های خصوصی اصلاً YÖS نمی‌خواهند.", en: "## What is YÖS?\n\nThe foreign student entrance exam for Turkish public universities; 80 math, geometry and IQ questions in 100 minutes. Since 2023 the centralised **TR-YÖS** by ÖSYM is accepted by most public universities; some (like Istanbul University) also run their own.\n\n## What score do you need?\n\n- ITU/YTU engineering: 70–85\n- Istanbul University medicine: 90+\n- Humanities: 50–65\n\n## Preparation\n\nIranian students with strong math usually prepare in 3–4 months. Eduways runs online classes with Persian-speaking tutors.\n\n## Alternatives\n\nSAT (1100+) is accepted by most public universities. Private universities do not require YÖS at all." },
+  },
+  {
+    id: "post-3", slug: "turkey-student-visa-guide", tags: ["visa"], author: "Eduways", published_at: "2026-05-14", reading_minutes: 6, cover_url: null,
+    title: { fa: "ویزای تحصیلی ترکیه: مدارک، زمان و نکات مصاحبه", en: "Türkiye student visa: documents, timeline and interview tips" },
+    excerpt: { fa: "از نامه پذیرش تا مهر ویزا؛ چه مدارکی لازم است و چقدر طول می‌کشد؟", en: "From acceptance letter to visa stamp; what you need and how long it takes." },
+    body: { fa: "## مدارک\n\nنامه پذیرش نهایی، پاسپورت، فرم ویزا، عکس، بیمه مسافرتی، رزرو اقامت، تمکن مالی (حدود ۵۰۰ دلار برای هر ماه)، ریزنمرات و دیپلم ترجمه‌شده.\n\n## زمان\n\nوقت سفارت در تهران معمولاً ۲–۴ هفته؛ صدور ویزا ۲–۳ هفته. پس حداقل **۲ ماه قبل از شروع ترم** اقدام کنید.\n\n## مصاحبه\n\nکوتاه است: چرا ترکیه، چرا این دانشگاه، هزینه‌ها را چه کسی می‌پردازد. صادق و مرتب باشید.\n\n## بعد از ورود\n\nظرف ۳۰ روز درخواست اقامت دانشجویی بدهید — ما همراهتان هستیم.", en: "## Documents\n\nFinal acceptance letter, passport, visa form, photos, travel insurance, accommodation booking, proof of funds (about $500 per month), translated transcripts and diploma.\n\n## Timeline\n\nConsulate appointments in Tehran take 2–4 weeks; issuance 2–3 weeks. Apply at least **2 months before term starts**.\n\n## Interview\n\nShort: why Türkiye, why this university, who pays. Be honest and organised.\n\n## After arrival\n\nApply for the student residence permit within 30 days — we go with you." },
+  },
+  {
+    id: "post-4", slug: "ikamet-residence-permit-students", tags: ["visa", "life"], author: "Eduways", published_at: "2026-04-21", reading_minutes: 5, cover_url: null,
+    title: { fa: "اقامت دانشجویی (کیملیک) قدم به قدم", en: "Student residence permit (ikamet) step by step" },
+    excerpt: { fa: "فرم e-ikamet، بیمه، آدرس، وقت اداره مهاجرت و زمان تحویل کارت.", en: "The e-ikamet form, insurance, address, immigration appointment and card delivery." },
+    body: { fa: "1. ثبت‌نام دانشگاه را نهایی کنید و **نامه دانشجویی (öğrenci belgesi)** بگیرید.\n2. بیمه سلامت خصوصی یا SGK دانشجویی.\n3. قرارداد اجاره یا نامه خوابگاه برای آدرس.\n4. فرم آنلاین e-ikamet و پرداخت هزینه کارت.\n5. وقت اداره مهاجرت (Göç İdaresi) — مدارک را فیزیکی ببرید.\n6. کارت ظرف ۴–۱۰ هفته با پست می‌رسد.\n\nادیوویز همه این مراحل را برای دانشجویانش انجام می‌دهد.", en: "1. Finalise registration and obtain the **student certificate (öğrenci belgesi)**.\n2. Private health insurance or student SGK.\n3. Lease or dorm letter for the address.\n4. Online e-ikamet form and card fee payment.\n5. Immigration office (Göç İdaresi) appointment — bring physical documents.\n6. The card arrives by post in 4–10 weeks.\n\nEduways handles every step for its students." },
+  },
+  {
+    id: "post-5", slug: "best-districts-students-istanbul", tags: ["life", "istanbul"], author: "Eduways", published_at: "2026-03-30", reading_minutes: 8, cover_url: null,
+    title: { fa: "بهترین مناطق استانبول برای زندگی دانشجویی", en: "Best Istanbul neighbourhoods for student life" },
+    excerpt: { fa: "بشیکتاش، کادیکوی، شیشلی یا آوجیلار؟ مقایسه اجاره، امنیت و دسترسی.", en: "Beşiktaş, Kadıköy, Şişli or Avcılar? Rent, safety and access compared." },
+    body: { fa: "## اگر بودجه دارید: بشیکتاش و کادیکوی\n\nجوان، امن، پر از کافه و کتابخانه. اجاره اتاق ۴۰۰–۵۰۰ دلار.\n\n## تعادل: شیشلی و اسکودار\n\nمرکزی و با جامعه ایرانی بزرگ. ۳۰۰–۴۵۰ دلار.\n\n## اقتصادی: آوجیلار، اسنلر، زیتین‌بورنو\n\nنزدیک پردیس‌های دولتی و خصوصی غرب شهر. ۲۰۰–۳۰۰ دلار.\n\n## زندگی پردیسی: توزلا و چکمه‌کوی\n\nسابانجی، اوکان، اوزیگین — خوابگاه داخل دانشگاه.\n\nصفحه [مناطق استانبول](/districts) را ببینید.", en: "## If you have the budget: Beşiktaş and Kadıköy\n\nYoung, safe, full of cafés and libraries. Rooms $400–500.\n\n## Balanced: Şişli and Üsküdar\n\nCentral with a large Iranian community. $300–450.\n\n## Economical: Avcılar, Esenler, Zeytinburnu\n\nNear the western public and private campuses. $200–300.\n\n## Campus life: Tuzla and Çekmeköy\n\nSabancı, Okan, Özyeğin — on-campus dorms.\n\nSee the [Istanbul districts](/districts) page." },
+  },
+  {
+    id: "post-6", slug: "sat-scholarships-turkey", tags: ["admission", "scholarships"], author: "Eduways", published_at: "2026-02-18", reading_minutes: 6, cover_url: null,
+    title: { fa: "با SAT چقدر بورسیه می‌گیرید؟ جدول دانشگاه به دانشگاه", en: "How much scholarship does SAT get you? University by university" },
+    excerpt: { fa: "کوچ، سابانجی، اوزیگین، BAU و بیلگی: نمره SAT و درصد بورسیه.", en: "Koç, Sabancı, Özyeğin, BAU and Bilgi: SAT score versus scholarship percentage." },
+    body: { fa: "| دانشگاه | SAT | بورسیه |\n|---|---|---|\n| کوچ | 1450+ | ۱۰۰٪ |\n| کوچ | 1300–1449 | ۵۰٪ |\n| سابانجی | 1400+ | ۱۰۰٪ |\n| اوزیگین | 1400+ | ۱۰۰٪ |\n| BAU | 1300+ | ۷۵٪ |\n| بیلگی | 1200+ | ۵۰–۷۵٪ |\n\nSAT در تهران برگزار نمی‌شود؛ دانش‌آموزان ایرانی معمولاً در استانبول، دبی یا ایروان امتحان می‌دهند. ادیوویز ثبت‌نام و اقامت روز آزمون را هماهنگ می‌کند.", en: "| University | SAT | Scholarship |\n|---|---|---|\n| Koç | 1450+ | 100% |\n| Koç | 1300–1449 | 50% |\n| Sabancı | 1400+ | 100% |\n| Özyeğin | 1400+ | 100% |\n| BAU | 1300+ | 75% |\n| Bilgi | 1200+ | 50–75% |\n\nSAT is not held in Tehran; Iranian students usually sit it in Istanbul, Dubai or Yerevan. Eduways arranges registration and exam-day stays." },
+  },
+];
+
+/* ───────────────────────────── FAQS ───────────────────────────── */
+const faq = (id: number, category: string, qFa: string, qEn: string, aFa: string, aEn: string): Faq => ({
+  id: `faq-${id}`, category, order: id, question: { fa: qFa, en: qEn }, answer: { fa: aFa, en: aEn },
+});
+export const faqs: Faq[] = [
+  faq(1, "general", "ادیوویز چه کاری برای من انجام می‌دهد؟", "What exactly does Eduways do for me?", "از انتخاب دانشگاه و ثبت درخواست تا تخفیف شهریه، ویزا، بلیت، خوابگاه، اقامت و استقرار در استانبول — همه‌چیز را یک تیم انجام می‌دهد.", "From choosing the university and filing the application to tuition discounts, visa, flight, housing, residence permit and settling in Istanbul — one team does it all."),
+  faq(2, "general", "هزینه خدمات ادیوویز چقدر است؟", "How much do Eduways services cost?", "مشاوره رایگان است. هزینه خدمات بسته به بسته انتخابی متفاوت است و پیش از شروع در قرارداد کتبی مشخص می‌شود. در بسیاری از دانشگاه‌های خصوصی، تخفیفی که می‌گیریم چند برابر هزینه خدمات است.", "Consultation is free. Service fees depend on the package and are fixed in a written agreement before we start. At many private universities the discount we secure is several times the fee."),
+  faq(3, "admission", "بدون YÖS و SAT می‌توانم پذیرش بگیرم؟", "Can I get admitted without YÖS or SAT?", "بله؛ اکثر دانشگاه‌های خصوصی فقط با دیپلم پذیرش می‌دهند. برای دانشگاه‌های دولتی YÖS یا SAT لازم است.", "Yes; most private universities admit on the diploma alone. Public universities require YÖS or SAT."),
+  faq(4, "admission", "با معدل پایین هم شانس دارم؟", "Do I have a chance with a low GPA?", "برای مهندسی، مدیریت و علوم انسانی در دانشگاه‌های خصوصی معمولاً بله. پزشکی و دندانپزشکی به معدل بالاتر (۱۷+) نیاز دارند.", "For engineering, business and humanities at private universities, usually yes. Medicine and dentistry need a higher GPA (17+/20)."),
+  faq(5, "admission", "پذیرش چقدر طول می‌کشد؟", "How long does admission take?", "دانشگاه‌های خصوصی: ۱–۲ هفته برای پذیرش مشروط. دولتی: بستگی به تقویم آزمون و اعلام نتایج دارد (معمولاً تابستان).", "Private: 1–2 weeks for conditional acceptance. Public: depends on the exam and results calendar (usually summer)."),
+  faq(6, "costs", "شهریه را باید یک‌جا پرداخت کنم؟", "Do I have to pay tuition all at once?", "بیشتر دانشگاه‌ها پرداخت اقساطی (۲ تا ۸ قسط) دارند. پیش‌شهریه برای صدور نامه پذیرش نهایی لازم است.", "Most universities offer instalments (2–8). A deposit is needed for the final acceptance letter."),
+  faq(7, "costs", "تخفیف ادیوویز با بورسیه دانشگاه جمع می‌شود؟", "Does the Eduways discount stack with university scholarships?", "در بسیاری از دانشگاه‌ها بله تا سقف مشخص. مورد به مورد بررسی و کتبی تأیید می‌کنیم.", "At many universities yes, up to a cap. We check case by case and confirm in writing."),
+  faq(8, "costs", "آیا می‌توانم در حین تحصیل کار کنم؟", "Can I work while studying?", "دانشجویان کارشناسی بعد از سال اول با اجازه کار می‌توانند پاره‌وقت کار کنند؛ ارشد و دکتری از ابتدا. بازار کار برای فارسی‌زبان‌ها در استانبول فعال است.", "Bachelor students can work part-time with a permit after the first year; master/PhD from the start. The job market for Persian speakers in Istanbul is active."),
+  faq(9, "visa", "ایرانی‌ها برای تحصیل ویزا لازم دارند؟", "Do Iranians need a visa to study?", "برای ورود توریستی تا ۹۰ روز خیر، اما برای اقامت دانشجویی توصیه می‌کنیم با ویزای تحصیلی وارد شوید تا فرایند کیملیک ساده‌تر باشد. ما هر دو مسیر را راهنمایی می‌کنیم.", "Not for tourist entry up to 90 days, but for student residence we recommend entering on a student visa so the ikamet process is smoother. We guide both routes."),
+  faq(10, "visa", "اقامت دانشجویی چقدر اعتبار دارد؟", "How long is the student residence permit valid?", "معمولاً یک سال و هر سال تمدید می‌شود تا پایان تحصیل.", "Usually one year, renewed annually until graduation."),
+  faq(11, "life", "استانبول برای دانشجوی دختر امن است؟", "Is Istanbul safe for female students?", "بله؛ مناطق دانشجویی مثل بشیکتاش، کادیکوی و شیشلی امن و پرجمعیت هستند. خوابگاه‌های دخترانه با نگهبانی ۲۴ ساعته هم فراوان‌اند.", "Yes; student districts like Beşiktaş, Kadıköy and Şişli are safe and busy. Women-only residences with 24h security are plentiful."),
+  faq(12, "life", "زبان ترکی نمی‌دانم؛ مشکلی است؟", "I do not speak Turkish; is that a problem?", "برای برنامه‌های انگلیسی خیر. برای زندگی روزمره، ۳ ماه کلاس TÖMER کافی است و دانشگاه‌ها دوره رایگان دارند.", "Not for English programs. For daily life, 3 months of TÖMER is enough, and universities offer free courses."),
+];
+
+/* ───────────────────────────── SETTINGS ───────────────────────────── */
+export const siteSettings: SiteSettings = {
+  whatsapp_number: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "905000000000",
+  instagram_url: process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://www.instagram.com/eduways.academytr",
+  address: { fa: "استانبول، شیشلی (آدرس دقیق به‌زودی)", en: "Istanbul, Şişli (exact address coming soon)" },
+  stats: { students_placed: 1200, partner_universities: 60, years_active: 6, satisfaction_pct: 98 },
+  email: "info@eduways.academy",
+  phone: "+90 500 000 00 00",
+};
