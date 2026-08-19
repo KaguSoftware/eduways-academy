@@ -4,10 +4,10 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { motion } from "motion/react";
 import { Link } from "@/i18n/navigation";
-import { MapPin, GitCompareArrows, Check, BadgePercent, Trophy } from "lucide-react";
+import { MapPin, GitCompareArrows, Check, BadgePercent, Trophy, Info } from "lucide-react";
 import type { UniversityWithRelations } from "@/lib/types";
 import { cn, formatNumber, formatRange, tx } from "@/lib/utils";
-import { Badge, Tooltip } from "@/components/ui/primitives";
+import { Tooltip } from "@/components/ui/primitives";
 import { useCompare } from "./compare-context";
 
 export function UniversityLogo({ name, logo, size = 56, className }: { name: string; logo?: string | null; size?: number; className?: string }) {
@@ -59,30 +59,41 @@ export function UniversityCard({ u, index = 0, compact = false }: { u: Universit
       <div className="flex items-start gap-4">
         <UniversityLogo name={u.short_name || u.name.en} logo={u.logo_url} />
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant={u.type === "public" ? "brand" : "accent"}>{t(`common.${u.type}`)}</Badge>
-            {u.is_featured && <Badge variant="warning"><Trophy className="size-3" />{t("universities.featured")}</Badge>}
-            {u.eduways_discount_pct ? <Badge variant="success"><BadgePercent className="size-3" />{t("common.upTo")} {formatNumber(u.eduways_discount_pct, locale)}٪</Badge> : null}
-          </div>
-          <h3 className="mt-2 line-clamp-2 text-base font-bold leading-snug">
+          <h3 className="line-clamp-2 text-base font-bold leading-snug">
             <Link href={`/universities/${u.slug}`} className="after:absolute after:inset-0 focus-ring rounded-lg">{name}</Link>
           </h3>
           {u.district && (
             <p className="mt-1 flex items-center gap-1 text-xs text-muted"><MapPin className="size-3.5" />{tx(u.district.name, locale)} · {t(`common.${u.district.side}`)}</p>
           )}
         </div>
-        <Tooltip content={t("common.score")}>
-          <div><ScoreRing value={u.editorial_score} /></div>
-        </Tooltip>
+        <div className="relative z-10 flex shrink-0 items-center gap-1.5">
+          {u.best_rank ? (
+            <Tooltip content={t("rankings.colRank")}>
+              <span className="inline-flex items-center rounded-full bg-surface px-2 py-1 font-en text-[11px] font-bold text-brand-800 tabular">#{formatNumber(u.best_rank, locale)}</span>
+            </Tooltip>
+          ) : null}
+          <Tooltip
+            content={
+              <ul className="flex flex-col gap-1">
+                <li>{t(`common.${u.type}`)}</li>
+                {u.is_featured && <li className="flex items-center gap-1"><Trophy className="size-3" />{t("universities.featured")}</li>}
+                {u.eduways_discount_pct ? <li className="flex items-center gap-1"><BadgePercent className="size-3" />{t("common.upTo")} {formatNumber(u.eduways_discount_pct, locale)}٪</li> : null}
+              </ul>
+            }
+          >
+            <button type="button" onClick={(e) => e.preventDefault()} aria-label={t(`common.${u.type}`)} className="inline-flex size-7 items-center justify-center rounded-full border border-border text-muted transition-colors hover:border-brand-300 hover:text-brand-800 focus-ring">
+              <Info className="size-4" />
+            </button>
+          </Tooltip>
+        </div>
       </div>
 
       {!compact && (
         <p className="mt-4 line-clamp-2 text-sm leading-6 text-muted">{tx(u.description, locale)}</p>
       )}
 
-      <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
+      <dl className="mt-4 grid grid-cols-2 gap-2 text-center">
         <Stat label={t("common.tuition")} value={formatRange(u.avg_tuition_min, u.avg_tuition_max, locale)} small />
-        <Stat label={t("rankings.colRank")} value={u.best_rank ? `#${formatNumber(u.best_rank, locale)}` : "—"} />
         <Stat label={t("common.programsCount", { count: u.programs.length })} value={englishCount ? `${formatNumber(englishCount, locale)} EN` : "TR"} />
       </dl>
 
