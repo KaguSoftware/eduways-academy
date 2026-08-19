@@ -349,3 +349,33 @@ export function Empty({ title, body, action }: { title: React.ReactNode; body?: 
     </div>
   );
 }
+
+/* ───────────────────────── Filter panel pieces ───────────────────────── */
+/** Removable pill used to show an applied filter above the results. */
+export function FilterPill({ label, onRemove }: { label: React.ReactNode; onRemove: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 py-1 pe-1 ps-2.5 text-xs font-semibold text-brand-800">
+      {label}
+      <button type="button" onClick={onRemove} aria-label="remove filter" className="flex size-4 items-center justify-center rounded-full text-brand-600 transition-colors hover:bg-brand-200/70 hover:text-brand-900 focus-ring">
+        <X className="size-3" strokeWidth={3} />
+      </button>
+    </span>
+  );
+}
+
+/** Collapsible titled block for a filter sidebar. */
+export function FilterGroup({ title, action, children, defaultOpen = true }: { title: React.ReactNode; action?: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = React.useState(defaultOpen);
+  return (
+    <div className="border-b border-border/70 pb-4 last:border-0 last:pb-0">
+      <div className="flex items-center justify-between gap-2">
+        <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="-mx-1 flex flex-1 items-center gap-1.5 rounded-lg px-1 py-1 text-start text-xs font-semibold uppercase tracking-wide text-muted transition-colors hover:text-foreground focus-ring">
+          <ChevronDown className={cn("size-3.5 transition-transform", !open && "-rotate-90 rtl:rotate-90")} />
+          {title}
+        </button>
+        {action}
+      </div>
+      {open && <div className="mt-2.5">{children}</div>}
+    </div>
+  );
+}
