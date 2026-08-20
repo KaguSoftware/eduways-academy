@@ -372,7 +372,7 @@ export function Skeleton({ className }: { className?: string }) {
   return <div className={cn("animate-pulse rounded-xl bg-surface-2", className)} />;
 }
 
-export function SearchInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+export function SearchInput(props: React.InputHTMLAttributes<HTMLInputElement> & { endIcon?: React.ReactNode }) {
   return <Input startIcon={<Search />} type="search" {...props} />;
 }
 

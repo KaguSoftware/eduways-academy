@@ -258,9 +258,22 @@ export function UniversityExplorer({ universities, districts, categories }: { un
         </div>
       </aside>
       <div>
-        <div className="sticky top-16 z-30 -mx-5 mb-6 glass px-5 py-3 md:top-[4.5rem] md:-mx-0 md:rounded-2xl md:border md:border-border">
+        <div className="sticky top-20 z-30 -mx-5 mb-6 glass px-5 py-3 md:top-[5.5rem] md:-mx-0 md:rounded-2xl md:border md:border-border">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <div className="flex-1"><SearchInput value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("home.searchPlaceholder")} /></div>
+            <div className="flex-1">
+              <SearchInput
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder={t("home.searchPlaceholder")}
+                className="pe-32"
+                endIcon={
+                  <span className="pointer-events-none flex items-center gap-3">
+                    <span aria-hidden className="h-5 w-px bg-border" />
+                    <span className="whitespace-nowrap text-xs text-muted">{t("common.results", { count: filtered.length })}</span>
+                  </span>
+                }
+              />
+            </div>
             <div className="flex items-center gap-2">
               <Select size="sm" ariaLabel={t("common.sortBy")} value={sort} onValueChange={(v) => setSort(v as Sort)} className="w-44" options={[
                 { value: "score", label: t("universities.sortScore") },
@@ -295,7 +308,6 @@ export function UniversityExplorer({ universities, districts, categories }: { un
             </div>
           )}
 
-          <p className="mt-2 text-xs text-muted">{t("common.results", { count: filtered.length })}</p>
         </div>
 
         {filtered.length === 0 ? (
