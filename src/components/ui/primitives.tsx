@@ -18,7 +18,7 @@ import {
   Tooltip as RxTooltip,
   Label as RxLabel,
 } from "radix-ui";
-import { Check, ChevronDown, ChevronUp, X, Minus, Plus, Search } from "lucide-react";
+import { Check, ChevronDown, X, Minus, Plus, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ───────────────────────── Label / Field ───────────────────────── */
@@ -65,11 +65,50 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTML
 ));
 Textarea.displayName = "Textarea";
 
+/* Always-visible scrollbar for the Select menu.
+   Radix's own ScrollUpButton/ScrollDownButton arrows and native overlay
+   scrollbars (macOS/Chromium draw those at zero width until you actually
+   scroll) both leave a long option list looking like it ends at the fold.
+   So the viewport keeps native scrolling and we paint a track + thumb over it. */
+function SelectScrollbar({ viewportRef }: { viewportRef: React.RefObject<HTMLDivElement | null> }) {
+  const [bar, setBar] = React.useState<{ height: number; top: number } | null>(null);
+
+  React.useEffect(() => {
+    const vp = viewportRef.current;
+    if (!vp) return;
+    const measure = () => {
+      const { scrollHeight, clientHeight, scrollTop } = vp;
+      if (scrollHeight <= clientHeight + 1) return setBar(null);
+      const track = clientHeight - PAD * 2;
+      const height = Math.max(MIN_THUMB, (clientHeight / scrollHeight) * track);
+      const top = PAD + (scrollTop / (scrollHeight - clientHeight)) * (track - height);
+      setBar({ height, top });
+    };
+    measure();
+    vp.addEventListener("scroll", measure, { passive: true });
+    const ro = new ResizeObserver(measure);
+    ro.observe(vp);
+    for (const c of Array.from(vp.children)) ro.observe(c);
+    return () => { vp.removeEventListener("scroll", measure); ro.disconnect(); };
+  }, [viewportRef]);
+
+  if (!bar) return null;
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-y-0 end-1 w-1.5">
+      <div className="absolute inset-y-1.5 w-full rounded-full bg-border/50" />
+      <div className="absolute w-full rounded-full bg-brand-300" style={{ height: bar.height, top: bar.top }} />
+    </div>
+  );
+}
+const PAD = 6;
+const MIN_THUMB = 24;
+
 /* ───────────────────────── Select ───────────────────────── */
 export interface SelectOption { value: string; label: React.ReactNode; disabled?: boolean }
 export function Select({ value, onValueChange, options, placeholder, className, size = "md", ariaLabel, name, disabled }: {
   value?: string; onValueChange?: (v: string) => void; options: SelectOption[]; placeholder?: React.ReactNode; className?: string; size?: "sm" | "md"; ariaLabel?: string; name?: string; disabled?: boolean;
 }) {
+  const viewportRef = React.useRef<HTMLDivElement>(null);
   return (
     <RxSelect.Root value={value} onValueChange={onValueChange} name={name} disabled={disabled}>
       <RxSelect.Trigger
@@ -85,9 +124,8 @@ export function Select({ value, onValueChange, options, placeholder, className, 
         <RxSelect.Icon className="shrink-0 text-muted"><ChevronDown className="size-4" /></RxSelect.Icon>
       </RxSelect.Trigger>
       <RxSelect.Portal>
-        <RxSelect.Content position="popper" sideOffset={6} className="z-[100] max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-2xl border border-border bg-background shadow-lg animate-in fade-in zoom-in-95">
-          <RxSelect.ScrollUpButton className="flex h-7 items-center justify-center text-muted"><ChevronUp className="size-4" /></RxSelect.ScrollUpButton>
-          <RxSelect.Viewport className="p-1.5">
+        <RxSelect.Content position="popper" sideOffset={6} className="relative z-[100] max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-2xl border border-border bg-background shadow-lg animate-in fade-in zoom-in-95">
+          <RxSelect.Viewport ref={viewportRef} className="scrollbar-none max-h-[inherit] overflow-y-auto overscroll-contain p-1.5 pe-3">
             {options.map((o) => (
               <RxSelect.Item key={o.value} value={o.value} disabled={o.disabled} className="relative flex cursor-pointer select-none items-center rounded-xl py-2.5 pe-3 ps-9 text-sm outline-none data-[highlighted]:bg-brand-50 data-[highlighted]:text-brand-800 data-[state=checked]:font-semibold data-[disabled]:opacity-40">
                 <span className="absolute start-3 flex size-4 items-center justify-center"><RxSelect.ItemIndicator><Check className="size-4 text-brand-600" /></RxSelect.ItemIndicator></span>
@@ -95,7 +133,7 @@ export function Select({ value, onValueChange, options, placeholder, className, 
               </RxSelect.Item>
             ))}
           </RxSelect.Viewport>
-          <RxSelect.ScrollDownButton className="flex h-7 items-center justify-center text-muted"><ChevronDown className="size-4" /></RxSelect.ScrollDownButton>
+          <SelectScrollbar viewportRef={viewportRef} />
         </RxSelect.Content>
       </RxSelect.Portal>
     </RxSelect.Root>
