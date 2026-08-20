@@ -219,7 +219,8 @@
     "duration": "Duration",
     "tuition": "Tuition / year",
     "maxTuition": "Max tuition",
-    "viewUniversity": "View university"
+    "viewUniversity": "View university",
+    "suggestions": "Suggestions"
   },
   "rankings": {
     "title": "University rankings",

@@ -174,9 +174,9 @@ export function RadioItem({ className, label, description, ...props }: React.Com
 }
 
 /** Segmented control: branded alternative to radio buttons for 2–4 options. */
-export function Segmented<T extends string>({ value, onChange, options, className, size = "md" }: { value: T; onChange: (v: T) => void; options: { value: T; label: React.ReactNode }[]; className?: string; size?: "sm" | "md" }) {
+export function Segmented<T extends string>({ value, onChange, options, className, size = "md", ariaLabel }: { value: T; onChange: (v: T) => void; options: { value: T; label: React.ReactNode }[]; className?: string; size?: "sm" | "md"; ariaLabel?: string }) {
   return (
-    <div role="radiogroup" className={cn("inline-flex rounded-full border border-border bg-surface p-1", className)}>
+    <div role="radiogroup" aria-label={ariaLabel} className={cn("inline-flex rounded-full border border-border bg-surface p-1", className)}>
       {options.map((o) => (
         <button
           key={o.value}
