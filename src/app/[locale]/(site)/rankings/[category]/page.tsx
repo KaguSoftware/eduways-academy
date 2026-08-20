@@ -6,6 +6,7 @@ import { routing } from "@/i18n/routing";
 import { tx } from "@/lib/utils";
 import { PageHeader, CtaBanner } from "@/components/layout/page";
 import { RankingTable, rankingList, type RankingKey } from "@/components/rankings/ranking-table";
+import { FieldSelect } from "@/components/rankings/field-select";
 
 export const revalidate = 3600;
 const FIXED = ["overall", "best-value", "cheapest", "english-taught", "public", "private"] as const;
@@ -44,14 +45,23 @@ export default async function RankingCategoryPage({ params }: { params: Promise<
   const repo = await getRepo();
   const [all, categories] = await Promise.all([repo.listUniversities(), repo.listCategories()]);
   const list = rankingList(category as RankingKey, all, categories);
+  const fieldSlug = category.startsWith("field-") ? category.slice("field-".length) : undefined;
 
   return (
     <>
       <PageHeader title={title} subtitle={t("rankings.sourceNote")} crumbs={[{ label: t("nav.home"), href: "/" }, { label: t("nav.rankings"), href: "/rankings" }, { label: title }]} />
       <section className="container-x py-10">
+        {fieldSlug ? (
+          <div className="mb-6 card flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-base font-bold">{t("rankings.byField")}</h2>
+              <p className="mt-1 text-sm text-muted">{t("rankings.byFieldHint")}</p>
+            </div>
+            <FieldSelect categories={categories} locale={loc} value={fieldSlug} placeholder={t("rankings.byFieldPlaceholder")} ariaLabel={t("rankings.byField")} className="w-full sm:w-72" />
+          </div>
+        ) : null}
         <RankingTable list={list} metricKey={category as RankingKey} />
         <p className="mt-6 text-xs text-muted">{t("rankings.methodologyBody")}</p>
-        {loc !== locale ? null : null}
       </section>
       <CtaBanner compact />
     </>

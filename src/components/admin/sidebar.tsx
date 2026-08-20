@@ -22,7 +22,7 @@ export function AdminSidebar({ email, role, hasDb }: { email: string; role: stri
 
   return (
     <>
-      <aside className="hidden w-64 shrink-0 flex-col border-e border-border bg-background lg:flex">
+      <aside className="hidden w-64 shrink-0 flex-col border-e border-border bg-background lg:sticky lg:top-0 lg:flex lg:h-screen">
         <div className="flex items-center gap-3 border-b border-border px-5 py-4">
           <Image src="/brand/logo.jpg" alt="" width={36} height={36} className="size-9 rounded-full" />
           <div className="leading-tight"><p className="text-sm font-extrabold text-brand-900">EDUWAYS</p><p className="text-[10px] text-muted">{t("title")}</p></div>

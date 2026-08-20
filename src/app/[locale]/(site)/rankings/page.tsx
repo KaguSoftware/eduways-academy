@@ -3,10 +3,9 @@ import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Trophy, BadgePercent, Wallet, Languages, Landmark, Building2, ArrowUpRight } from "lucide-react";
 import { getRepo } from "@/lib/repo";
-import { tx } from "@/lib/utils";
 import { PageHeader, CtaBanner, SectionHeader } from "@/components/layout/page";
 import { RankingTable, rankingList } from "@/components/rankings/ranking-table";
-import { DynamicIcon } from "@/components/home/sections";
+import { FieldSelect } from "@/components/rankings/field-select";
 
 export const revalidate = 3600;
 
@@ -46,15 +45,12 @@ export default async function RankingsPage({ params }: { params: Promise<{ local
             </Link>
           ))}
         </div>
-        <div className="mt-8">
-          <h2 className="mb-4 text-lg font-bold">{t("rankings.byField")}</h2>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((c) => (
-              <Link key={c.id} href={`/rankings/field-${c.slug}`} className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-ring">
-                <DynamicIcon name={c.icon ?? "Sparkles"} className="size-4 text-brand-600" />{tx(c.name, loc)}
-              </Link>
-            ))}
+        <div className="mt-8 card flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-bold">{t("rankings.byField")}</h2>
+            <p className="mt-1 text-sm text-muted">{t("rankings.byFieldHint")}</p>
           </div>
+          <FieldSelect categories={categories} locale={loc} placeholder={t("rankings.byFieldPlaceholder")} ariaLabel={t("rankings.byField")} className="w-full sm:w-72" />
         </div>
       </section>
 

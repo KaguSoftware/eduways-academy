@@ -100,7 +100,7 @@
 }
 @keyframes marquee {
   from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  to { transform: translateX(var(--marquee-end, -50%)); }
 }
 
 /* ---------- Base ---------- */
@@ -130,6 +130,22 @@ html[dir="ltr"] .font-fa { font-family: var(--font-fa); }
 *::-webkit-scrollbar-thumb:hover { background: var(--brand-600); }
 .scrollbar-none { scrollbar-width: none; }
 .scrollbar-none::-webkit-scrollbar { display: none; }
+
+/* Quiet scrollbar for panels that scroll inside their own bordered box:
+   slim, neutral, and only visible while the pointer is over the panel. */
+.scrollbar-subtle { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.scrollbar-subtle:hover, .scrollbar-subtle:focus-within { scrollbar-color: var(--border) transparent; }
+.scrollbar-subtle::-webkit-scrollbar { width: 6px; height: 6px; }
+.scrollbar-subtle::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-subtle::-webkit-scrollbar-thumb {
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+.scrollbar-subtle:hover::-webkit-scrollbar-thumb,
+.scrollbar-subtle:focus-within::-webkit-scrollbar-thumb { background: color-mix(in oklab, var(--muted) 35%, transparent); }
+.scrollbar-subtle::-webkit-scrollbar-thumb:hover { background: color-mix(in oklab, var(--muted) 55%, transparent); }
 
 /* Kill native number spinners / search decorations (we ship custom controls) */
 input[type="number"]::-webkit-inner-spin-button,
@@ -185,3 +201,88 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 
 @keyframes accordion-down { from { height: 0; opacity: 0; } to { height: var(--radix-accordion-content-height); opacity: 1; } }
 @keyframes accordion-up { from { height: var(--radix-accordion-content-height); opacity: 1; } to { height: 0; opacity: 0; } }
+
+/* ---------- Graduation trail (site-wide scroll rider) ----------
+   Layering contract inside `.site-shell` (an isolated stacking context):
+     0  section backgrounds — non-positioned blocks, or positioned wrappers with z-index auto
+     1  the trail + cap (.grad-trail)
+     2  page content — every `.container-x` inside <main>/<footer> is lifted here, so
+        cards and text paint over the cap while section backgrounds stay under it
+    50+ sticky header, bars, portals (unchanged)
+   Lives in the components layer: it wins over `@utility container-x` (which sets no
+   position/z-index) while a plain utility (`z-0`, `static`) can still opt one out. */
+@layer components {
+  .site-shell :is(main, footer) .container-x { position: relative; z-index: 2; }
+}
+
+.grad-trail {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.grad-trail[data-ready="true"] { opacity: 1; }
+.grad-trail__svg { position: absolute; inset: 0; display: block; overflow: visible; }
+/* Own compositor layer: the stroke-dashoffset write each frame must not invalidate page tiles. */
+.grad-trail__svg--progress { transform: translateZ(0); will-change: transform; }
+.grad-trail__base {
+  fill: none;
+  stroke: color-mix(in oklab, var(--brand-400) 55%, transparent);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 0.1 9; /* period 9.1 — keep in sync with DOT_PERIOD in grad-trail.tsx */
+}
+.grad-trail__progress {
+  fill: none;
+  stroke: url(#grad-trail-stroke);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+/* The hat box's origin is its anchor (inside the crown band, viewBox y≈122 — keep in sync
+   with HEAD_POINT in grad-trail.tsx): translate puts the anchor on the trail, rotate/scale
+   pivot around it, and the trail's tip stays hidden under the band. */
+.grad-trail__hat {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+  filter: drop-shadow(0 10px 18px rgb(14 42 92 / 0.22));
+}
+.grad-trail__hat img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -64%);
+}
+
+/* Footer stage: the student figure + crossfade between the two poses. */
+.grad-stage {
+  position: relative;
+  width: 9.25rem;
+  height: 13.2rem;
+}
+@media (min-width: 768px) {
+  .grad-stage { width: 10.5rem; height: 15rem; }
+}
+.grad-stage__figure {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1), transform 180ms cubic-bezier(0.22, 1, 0.36, 1), filter 180ms;
+}
+.grad-stage__figure--after { opacity: 0; transform: scale(0.97); filter: blur(2px); }
+.grad-stage[data-pose="after"] .grad-stage__figure--before { opacity: 0; transform: scale(0.97); filter: blur(2px); }
+.grad-stage[data-pose="after"] .grad-stage__figure--after { opacity: 1; transform: none; filter: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .grad-trail { transition: none; }
+  .grad-stage__figure { transition: none; }
+}
+@media print {
+  .grad-trail { display: none; }
+}
