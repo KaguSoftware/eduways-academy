@@ -8,10 +8,37 @@ import { SlidersHorizontal, X } from "lucide-react";
 import type { UniversityWithRelations, District, Category } from "@/lib/types";
 import { cn, formatUSD, tx } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Select, Segmented, Slider, SearchInput, Badge, Empty, Dialog, DialogContent, DialogTrigger, Checkbox } from "@/components/ui/primitives";
+import { Select, Segmented, Slider, SearchInput, Badge, Empty, Dialog, DialogContent, DialogTrigger, DialogClose, Checkbox, FilterGroup, FilterPill } from "@/components/ui/primitives";
 import { UniversityCard } from "./university-card";
 
 type Sort = "score" | "tuitionAsc" | "tuitionDesc" | "rank" | "name";
+type Type = "all" | "public" | "foundation";
+type Side = "all" | "european" | "asian";
+
+const TUITION_MIN = 1000;
+const TUITION_MAX = 35000;
+const TUITION_STEP = 500;
+
+/** A range covering the whole scale means "any tuition" — no restriction applied. */
+const isAnyTuition = (min: number, max: number) => min <= TUITION_MIN && max >= TUITION_MAX;
+
+type Filters = { type: Type; side: Side; lang: string; district: string; category: string; minTuition: number; maxTuition: number; dorm: boolean };
+const EMPTY: Filters = { type: "all", side: "all", lang: "all", district: "all", category: "all", minTuition: TUITION_MIN, maxTuition: TUITION_MAX, dorm: false };
+
+/** Does a university pass every filter except the ones named in `skip`? */
+function matches(u: UniversityWithRelations, f: Filters, skip: keyof Filters | null = null) {
+  if (skip !== "type" && f.type !== "all" && u.type !== f.type) return false;
+  if (skip !== "side" && f.side !== "all" && u.district?.side !== f.side) return false;
+  if (skip !== "lang" && f.lang !== "all" && !u.languages.includes(f.lang)) return false;
+  if (skip !== "district" && f.district !== "all" && u.district?.slug !== f.district) return false;
+  if (skip !== "category" && f.category !== "all" && !u.programs.some((p) => p.category_id === f.category)) return false;
+  if (skip !== "minTuition" && skip !== "maxTuition" && !isAnyTuition(f.minTuition, f.maxTuition)) {
+    // Keep a university when its own tuition range overlaps the selected one.
+    if (u.avg_tuition_min > f.maxTuition || u.avg_tuition_max < f.minTuition) return false;
+  }
+  if (skip !== "dorm" && f.dorm && !u.has_dorm) return false;
+  return true;
+}
 
 export function UniversityExplorer({ universities, districts, categories }: { universities: UniversityWithRelations[]; districts: District[]; categories: Category[] }) {
   const t = useTranslations();
@@ -21,48 +48,47 @@ export function UniversityExplorer({ universities, districts, categories }: { un
   const sp = useSearchParams();
 
   const [q, setQ] = React.useState(sp.get("q") ?? "");
-  const [type, setType] = React.useState<"all" | "public" | "foundation">((sp.get("type") as never) || "all");
-  const [side, setSide] = React.useState<"all" | "european" | "asian">((sp.get("side") as never) || "all");
-  const [lang, setLang] = React.useState<string>(sp.get("lang") || "all");
-  const [district, setDistrict] = React.useState<string>(sp.get("district") || "all");
-  const [category, setCategory] = React.useState<string>(sp.get("category") || "all");
-  const [maxTuition, setMaxTuition] = React.useState<number>(Number(sp.get("max")) || 35000);
-  const [dorm, setDorm] = React.useState(sp.get("dorm") === "1");
+  const [f, setF] = React.useState<Filters>({
+    type: (sp.get("type") as Type) || "all",
+    side: (sp.get("side") as Side) || "all",
+    lang: sp.get("lang") || "all",
+    district: sp.get("district") || "all",
+    category: sp.get("category") || "all",
+    minTuition: Number(sp.get("min")) || TUITION_MIN,
+    maxTuition: Number(sp.get("max")) || TUITION_MAX,
+    dorm: sp.get("dorm") === "1",
+  });
   const [sort, setSort] = React.useState<Sort>((sp.get("sort") as Sort) || "score");
+  const set = <K extends keyof Filters>(k: K, v: Filters[K]) => setF((prev) => ({ ...prev, [k]: v }));
 
   // keep URL shareable
   React.useEffect(() => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
-    if (type !== "all") params.set("type", type);
-    if (side !== "all") params.set("side", side);
-    if (lang !== "all") params.set("lang", lang);
-    if (district !== "all") params.set("district", district);
-    if (category !== "all") params.set("category", category);
-    if (maxTuition < 35000) params.set("max", String(maxTuition));
-    if (dorm) params.set("dorm", "1");
+    if (f.type !== "all") params.set("type", f.type);
+    if (f.side !== "all") params.set("side", f.side);
+    if (f.lang !== "all") params.set("lang", f.lang);
+    if (f.district !== "all") params.set("district", f.district);
+    if (f.category !== "all") params.set("category", f.category);
+    if (f.minTuition > TUITION_MIN) params.set("min", String(f.minTuition));
+    if (f.maxTuition < TUITION_MAX) params.set("max", String(f.maxTuition));
+    if (f.dorm) params.set("dorm", "1");
     if (sort !== "score") params.set("sort", sort);
     const qs = params.toString();
     const id = setTimeout(() => router.replace((qs ? `${pathname}?${qs}` : pathname) as never, { scroll: false }), 250);
     return () => clearTimeout(id);
-  }, [q, type, side, lang, district, category, maxTuition, dorm, sort, pathname, router]);
+  }, [q, f, sort, pathname, router]);
+
+  const searched = React.useMemo(() => {
+    const ql = q.trim().toLowerCase();
+    if (!ql) return universities;
+    return universities.filter((u) =>
+      [u.name.fa, u.name.en, u.short_name ?? "", u.district?.name.fa ?? "", u.district?.name.en ?? ""].join(" ").toLowerCase().includes(ql),
+    );
+  }, [universities, q]);
 
   const filtered = React.useMemo(() => {
-    const ql = q.trim().toLowerCase();
-    const list = universities.filter((u) => {
-      if (type !== "all" && u.type !== type) return false;
-      if (side !== "all" && u.district?.side !== side) return false;
-      if (lang !== "all" && !u.languages.includes(lang)) return false;
-      if (district !== "all" && u.district?.slug !== district) return false;
-      if (category !== "all" && !u.programs.some((p) => p.category_id === category)) return false;
-      if (u.avg_tuition_min > maxTuition) return false;
-      if (dorm && !u.has_dorm) return false;
-      if (ql) {
-        const hay = [u.name.fa, u.name.en, u.short_name ?? "", u.district?.name.fa ?? "", u.district?.name.en ?? ""].join(" ").toLowerCase();
-        if (!hay.includes(ql)) return false;
-      }
-      return true;
-    });
+    const list = searched.filter((u) => matches(u, f));
     const by: Record<Sort, (a: UniversityWithRelations, b: UniversityWithRelations) => number> = {
       score: (a, b) => b.editorial_score - a.editorial_score,
       tuitionAsc: (a, b) => a.avg_tuition_min - b.avg_tuition_min,
@@ -70,52 +96,165 @@ export function UniversityExplorer({ universities, districts, categories }: { un
       rank: (a, b) => (a.best_rank ?? 999) - (b.best_rank ?? 999),
       name: (a, b) => tx(a.name, locale).localeCompare(tx(b.name, locale), locale),
     };
-    return list.sort(by[sort]);
-  }, [universities, q, type, side, lang, district, category, maxTuition, dorm, sort, locale]);
+    return [...list].sort(by[sort]);
+  }, [searched, f, sort, locale]);
 
-  const reset = () => { setQ(""); setType("all"); setSide("all"); setLang("all"); setDistrict("all"); setCategory("all"); setMaxTuition(35000); setDorm(false); setSort("score"); };
-  const activeCount = [type !== "all", side !== "all", lang !== "all", district !== "all", category !== "all", maxTuition < 35000, dorm].filter(Boolean).length;
+  /** How many results a facet value would yield, ignoring that facet's own selection. */
+  const countFor = React.useCallback(
+    (key: keyof Filters, predicate: (u: UniversityWithRelations) => boolean) =>
+      searched.reduce((n, u) => (matches(u, f, key) && predicate(u) ? n + 1 : n), 0),
+    [searched, f],
+  );
 
-  const Filters = (
-    <div className="flex flex-col gap-5">
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">{t("universities.filterType")}</p>
-        <Segmented value={type} onChange={setType} options={[{ value: "all", label: t("common.all") }, { value: "public", label: t("common.public") }, { value: "foundation", label: t("common.foundation") }]} className="w-full [&>button]:flex-1" size="sm" />
-      </div>
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">{t("universities.filterSide")}</p>
-        <Segmented value={side} onChange={setSide} options={[{ value: "all", label: t("common.all") }, { value: "european", label: t("common.european") }, { value: "asian", label: t("common.asian") }]} className="w-full [&>button]:flex-1" size="sm" />
-      </div>
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">{t("universities.filterLanguage")}</p>
-        <Segmented value={lang} onChange={setLang} options={[{ value: "all", label: t("common.all") }, { value: "en", label: t("common.en") }, { value: "tr", label: t("common.tr") }]} className="w-full [&>button]:flex-1" size="sm" />
-      </div>
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">{t("universities.filterDistrict")}</p>
-        <Select value={district} onValueChange={setDistrict} options={[{ value: "all", label: t("common.all") }, ...districts.map((d) => ({ value: d.slug, label: tx(d.name, locale) }))]} />
-      </div>
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">{t("programs.field")}</p>
-        <Select value={category} onValueChange={setCategory} options={[{ value: "all", label: t("common.all") }, ...categories.map((c) => ({ value: c.id, label: tx(c.name, locale) }))]} />
-      </div>
-      <div>
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">{t("universities.filterTuition")}</p>
-          <span className="text-xs font-bold tabular text-brand-800">{maxTuition >= 35000 ? t("common.all") : formatUSD(maxTuition, locale)}</span>
+  const reset = () => { setF(EMPTY); setQ(""); };
+
+  // Applied filters, as removable pills.
+  const pills = React.useMemo(() => {
+    const out: { key: string; label: string; clear: () => void }[] = [];
+    if (f.type !== "all") out.push({ key: "type", label: t(`common.${f.type}`), clear: () => set("type", "all") });
+    if (f.side !== "all") out.push({ key: "side", label: t(`common.${f.side}`), clear: () => set("side", "all") });
+    if (f.lang !== "all") out.push({ key: "lang", label: t(`common.${f.lang}`), clear: () => set("lang", "all") });
+    if (f.district !== "all") out.push({ key: "district", label: tx(districts.find((d) => d.slug === f.district)?.name ?? { fa: f.district, en: f.district }, locale), clear: () => set("district", "all") });
+    if (f.category !== "all") out.push({ key: "category", label: tx(categories.find((c) => c.id === f.category)?.name ?? { fa: f.category, en: f.category }, locale), clear: () => set("category", "all") });
+    if (!isAnyTuition(f.minTuition, f.maxTuition)) {
+      const label =
+        f.minTuition <= TUITION_MIN
+          ? `${t("common.upTo")} ${formatUSD(f.maxTuition, locale)}`
+          : f.maxTuition >= TUITION_MAX
+            ? `${formatUSD(f.minTuition, locale)}+`
+            : `${formatUSD(f.minTuition, locale)} – ${formatUSD(f.maxTuition, locale)}`;
+      out.push({ key: "tuition", label, clear: () => setF((prev) => ({ ...prev, minTuition: TUITION_MIN, maxTuition: TUITION_MAX })) });
+    }
+    if (f.dorm) out.push({ key: "dorm", label: t("common.dorm"), clear: () => set("dorm", false) });
+    return out;
+  }, [f, districts, categories, locale, t]);
+
+  const activeCount = pills.length;
+
+  const Panel = (
+    <div className="flex flex-col gap-4">
+      <FilterGroup title={t("universities.filterType")}>
+        <Segmented
+          value={f.type}
+          onChange={(v) => set("type", v)}
+          className="w-full [&>button]:flex-1"
+          size="sm"
+          options={[
+            { value: "all" as Type, label: t("common.all") },
+            { value: "public" as Type, label: t("common.public") },
+            { value: "foundation" as Type, label: t("common.foundation") },
+          ]}
+        />
+      </FilterGroup>
+
+      <FilterGroup title={t("universities.filterSide")}>
+        <Segmented
+          value={f.side}
+          onChange={(v) => set("side", v)}
+          className="w-full [&>button]:flex-1"
+          size="sm"
+          options={[
+            { value: "all" as Side, label: t("common.all") },
+            { value: "european" as Side, label: t("common.european") },
+            { value: "asian" as Side, label: t("common.asian") },
+          ]}
+        />
+      </FilterGroup>
+
+      <FilterGroup title={t("universities.filterLanguage")}>
+        <Segmented
+          value={f.lang}
+          onChange={(v) => set("lang", v)}
+          className="w-full [&>button]:flex-1"
+          size="sm"
+          options={[
+            { value: "all", label: t("common.all") },
+            { value: "en", label: t("common.en") },
+            { value: "tr", label: t("common.tr") },
+          ]}
+        />
+      </FilterGroup>
+
+      <FilterGroup title={t("universities.filterDistrict")}>
+        <Select
+          size="sm"
+          ariaLabel={t("universities.filterDistrict")}
+          value={f.district}
+          onValueChange={(v) => set("district", v)}
+          options={[
+            { value: "all", label: t("universities.allDistricts") },
+            ...districts.map((d) => {
+              const n = countFor("district", (u) => u.district?.slug === d.slug);
+              return { value: d.slug, label: `${tx(d.name, locale)} · ${n}`, disabled: n === 0 };
+            }),
+          ]}
+        />
+      </FilterGroup>
+
+      <FilterGroup title={t("programs.field")}>
+        <Select
+          size="sm"
+          ariaLabel={t("programs.field")}
+          value={f.category}
+          onValueChange={(v) => set("category", v)}
+          options={[
+            { value: "all", label: t("universities.allFields") },
+            ...categories.map((c) => {
+              const n = countFor("category", (u) => u.programs.some((p) => p.category_id === c.id));
+              return { value: c.id, label: `${tx(c.name, locale)} · ${n}`, disabled: n === 0 };
+            }),
+          ]}
+        />
+      </FilterGroup>
+
+      <FilterGroup
+        title={t("universities.filterTuitionShort")}
+        action={
+          <span className="text-xs font-bold tabular text-brand-800">
+            {isAnyTuition(f.minTuition, f.maxTuition)
+              ? t("universities.anyTuition")
+              : `${formatUSD(f.minTuition, locale)} – ${formatUSD(f.maxTuition, locale)}`}
+          </span>
+        }
+      >
+        <div className="flex flex-col gap-3">
+          <Slider
+            value={[f.minTuition, f.maxTuition]}
+            onValueChange={([lo, hi]) => setF((prev) => ({ ...prev, minTuition: lo, maxTuition: hi }))}
+            min={TUITION_MIN}
+            max={TUITION_MAX}
+            step={TUITION_STEP}
+            minStepsBetweenThumbs={1}
+            aria-label={t("universities.filterTuition")}
+          />
+          <div className="flex items-baseline justify-between gap-2 text-[11px] text-muted">
+            <span className="tabular">{formatUSD(TUITION_MIN, locale)}</span>
+            <span className="tabular">{formatUSD(TUITION_MAX, locale)}+</span>
+          </div>
         </div>
-        <Slider value={[maxTuition]} onValueChange={([v]) => setMaxTuition(v)} min={1000} max={35000} step={500} />
-      </div>
-      <Checkbox checked={dorm} onCheckedChange={(v) => setDorm(v === true)} label={t("common.dorm")} />
-      {activeCount > 0 && <Button variant="ghost" size="sm" onClick={reset}><X className="size-4" />{t("common.reset")}</Button>}
+      </FilterGroup>
+
+      <FilterGroup title={t("universities.filterCampus")}>
+        <Checkbox checked={f.dorm} onCheckedChange={(v) => set("dorm", v === true)} label={<span className="flex items-center gap-1.5">{t("common.dorm")}<span className="tabular text-[11px] text-muted">{countFor("dorm", (u) => u.has_dorm)}</span></span>} />
+      </FilterGroup>
     </div>
   );
 
   return (
     <div className="container-x grid gap-8 py-10 lg:grid-cols-[280px_1fr]">
       <aside className="hidden lg:block">
-        <div className="sticky top-24 card p-5">
-          <h2 className="mb-4 flex items-center gap-2 font-bold"><SlidersHorizontal className="size-4 text-brand-600" />{t("common.filters")}</h2>
-          {Filters}
+        {/* Capped to the viewport so a tall filter list scrolls inside the card
+            instead of running past the bottom of a short window. */}
+        <div className="sticky top-24 card flex max-h-[calc(100dvh-7rem)] flex-col bg-surface/40 p-4">
+          <div className="mb-4 flex shrink-0 items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 font-bold"><SlidersHorizontal className="size-4 text-brand-600" />{t("common.filters")}</h2>
+            {activeCount > 0 && (
+              <button type="button" onClick={reset} className="rounded-lg px-1.5 py-1 text-xs font-semibold text-brand-600 transition-colors hover:text-brand-800 focus-ring">
+                {t("common.clear")}
+              </button>
+            )}
+          </div>
+          <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl border border-border bg-background py-3.5 pe-1.5 ps-3">{Panel}</div>
         </div>
       </aside>
       <div>
@@ -134,10 +273,28 @@ export function UniversityExplorer({ universities, districts, categories }: { un
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm" className="lg:hidden"><SlidersHorizontal className="size-4" />{t("common.filters")}{activeCount > 0 && <Badge variant="brand">{activeCount}</Badge>}</Button>
                 </DialogTrigger>
-                <DialogContent side="bottom" heading={t("common.filters")}>{Filters}</DialogContent>
+                <DialogContent side="bottom" heading={t("common.filters")}>
+                  <div className="rounded-2xl border border-border bg-background px-3 py-3.5">{Panel}</div>
+                  <div className="sticky -bottom-1 -mx-1 mt-5 flex items-center gap-2 border-t border-border bg-background px-1 pb-1 pt-3">
+                    {activeCount > 0 && <Button variant="ghost" size="sm" onClick={reset}><X className="size-4" />{t("common.clear")}</Button>}
+                    <DialogClose asChild>
+                      <Button className="flex-1" size="sm">{t("universities.showResults", { count: filtered.length })}</Button>
+                      </DialogClose>
+                  </div>
+                </DialogContent>
               </Dialog>
             </div>
           </div>
+
+          {pills.length > 0 && (
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+              {pills.map((p) => <FilterPill key={p.key} label={p.label} onRemove={p.clear} />)}
+              <button type="button" onClick={reset} className="rounded-lg px-1.5 py-1 text-xs font-semibold text-muted underline-offset-2 transition-colors hover:text-foreground hover:underline focus-ring">
+                {t("common.clear")}
+              </button>
+            </div>
+          )}
+
           <p className="mt-2 text-xs text-muted">{t("common.results", { count: filtered.length })}</p>
         </div>
 

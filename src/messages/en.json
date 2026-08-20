@@ -96,6 +96,10 @@
     "heroCtaSecondary": "Browse universities",
     "searchPlaceholder": "Search a university, major or district…",
     "searchButton": "Search",
+    "finderQuestionMajor": "What do you want to study?",
+    "finderMajorPlaceholder": "e.g. medicine, architecture, business…",
+    "finderSubmit": "Show programs",
+    "finderHint": "Type a major and we’ll show matching programs — or skip and browse everything.",
     "trustLine": "Trusted by students from Iran, Afghanistan, Tajikistan and the diaspora",
     "statsStudents": "Students placed",
     "statsUniversities": "Partner universities",
@@ -196,7 +200,13 @@
     "englishTaught": "English programs",
     "featured": "Featured",
     "highlights": "Highlights",
-    "eduwaysDiscount": "Eduways students get up to {pct}% off tuition here."
+    "eduwaysDiscount": "Eduways students get up to {pct}% off tuition here.",
+    "allDistricts": "All districts",
+    "allFields": "All fields",
+    "anyTuition": "Any tuition",
+    "filterCampus": "Campus",
+    "showResults": "Show {count, plural, one {# result} other {# results}}",
+    "filterTuitionShort": "Tuition"
   },
   "programs": {
     "title": "Programs",
@@ -367,7 +377,9 @@
     "madeIn": "Istanbul, Türkiye",
     "legal": "Legal",
     "privacy": "Privacy",
-    "terms": "Terms"
+    "terms": "Terms",
+    "graduate": "Graduate",
+    "graduateHint": "throws the cap and takes you back to the top of the page"
   },
   "errors": {
     "notFoundTitle": "Page not found",

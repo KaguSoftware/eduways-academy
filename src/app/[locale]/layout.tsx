@@ -39,7 +39,9 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   const dir = isRtl(locale) ? "rtl" : "ltr";
 
   return (
-    <html lang={locale} dir={dir} className={`${inter.variable} ${vazirmatn.variable} h-full antialiased`} suppressHydrationWarning>
+    // data-scroll-behavior lets Next 16 suspend our `scroll-behavior: smooth` during route
+    // transitions, so navigations land at the top instantly instead of animating there.
+    <html lang={locale} dir={dir} data-scroll-behavior="smooth" className={`${inter.variable} ${vazirmatn.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <NextIntlClientProvider messages={messages}>
           <DirectionProvider dir={dir}>
