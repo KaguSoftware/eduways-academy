@@ -5,6 +5,7 @@ import { MessageCircle, Mail, MapPin } from "lucide-react";
 import { InstagramIcon as Instagram } from "@/components/ui/icons";
 import type { SiteSettings } from "@/lib/types";
 import { tx, whatsappLink } from "@/lib/utils";
+import { GraduationStage } from "@/components/grad-trail/graduation-stage";
 
 export async function Footer({ settings }: { settings: SiteSettings }) {
   const t = await getTranslations();
@@ -31,7 +32,9 @@ export async function Footer({ settings }: { settings: SiteSettings }) {
   return (
     <footer className="relative mt-24 overflow-hidden border-t border-border bg-surface">
       <div className="pointer-events-none absolute inset-x-0 -top-40 h-80 bg-[radial-gradient(60%_60%_at_50%_0%,color-mix(in_oklab,var(--brand-200)_55%,transparent),transparent)]" />
-      <div className="container-x relative grid gap-12 py-16 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.2fr]">
+      {/* The graduation stage sits outside the lifted content container on purpose — see GraduationStage. */}
+      <GraduationStage />
+      <div className="container-x relative grid gap-12 py-14 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.2fr]">
         <div className="space-y-5">
           <Link href="/" className="inline-flex items-center gap-3">
             <Image src="/brand/logo.jpg" alt="Eduways Academy" width={48} height={48} className="size-12 rounded-full" />

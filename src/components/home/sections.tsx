@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import * as Icons from "lucide-react";
-import { ShieldCheck, BadgePercent, Plane, Languages, ArrowUpRight, Quote, MapPin } from "lucide-react";
+import { ShieldCheck, BadgePercent, Plane, Languages, ArrowUpRight, Quote, MapPin, Diamond } from "lucide-react";
 import { InstagramIcon as Instagram } from "@/components/ui/icons";
 import type { UniversityWithRelations, Service, Story, District, Post, Faq, University } from "@/lib/types";
 import { cn, formatNumber, formatUSD, tx, formatDate } from "@/lib/utils";
@@ -18,19 +18,35 @@ export function DynamicIcon({ name, className }: { name: string; className?: str
 }
 
 /* ───────── Trust marquee ───────── */
+const MARQUEE_MIN_ITEMS = 40;
 export function TrustMarquee({ universities }: { universities: University[] }) {
-  const list = [...universities, ...universities];
+  const copies = universities.length > 0 ? Math.max(2, Math.ceil(MARQUEE_MIN_ITEMS / universities.length)) : 2;
+  const list = Array.from({ length: copies }, () => universities).flat();
   return (
-    <div className="relative overflow-hidden border-y border-border bg-surface py-5">
-      <div className="pointer-events-none absolute inset-y-0 start-0 w-24 bg-gradient-to-r from-surface to-transparent rtl:bg-gradient-to-l" />
-      <div className="pointer-events-none absolute inset-y-0 end-0 w-24 bg-gradient-to-l from-surface to-transparent rtl:bg-gradient-to-r" />
-      <div className="flex w-max animate-marquee gap-10 [direction:ltr] hover:[animation-play-state:paused]">
-        {list.map((u, i) => (
-          <div key={u.id + i} className="flex items-center gap-3 whitespace-nowrap text-sm font-semibold text-muted">
-            <UniversityLogo name={u.short_name || u.name.en} logo={u.logo_url} size={32} className="rounded-lg text-xs" />
-            <span className="font-en">{u.name.en}</span>
-          </div>
-        ))}
+    // The whole strip is locked to `ltr`. Under RTL the browser anchors an over-wide track to
+    // the right edge of the frame, so the negative translate walks it out of view and the loop
+    // breaks halfway through; forcing the direction makes both locales scroll identically.
+    <div dir="ltr" className="relative overflow-hidden border-y border-border bg-background py-5">
+      {/* The strip is not a `.container-x`, so lift the logos above the graduation trail
+          ourselves; the edge fade is a mask (paints nothing) rather than gradient overlays,
+          which would sit above the trail and hide it at the strip's ends. */}
+      <div className="relative z-[2] [mask-image:linear-gradient(to_right,transparent,#000_6rem,#000_calc(100%-6rem),transparent)]">
+        <div
+          className="flex w-max animate-marquee hover:[animation-play-state:paused]"
+          style={{ "--marquee-end": `-${100 / copies}%` } as React.CSSProperties}
+        >
+          {list.map((u, i) => (
+            // Spacing rides on the item instead of a flex `gap`: a gap is dropped after the last
+            // slot, so one copy is narrower than 1/copies of the track and the wrap jumps. With
+            // the trailing space baked into every item the translate lands exactly on a seam.
+            <div key={u.id + i} className="flex shrink-0 items-center gap-10 pr-10">
+              {/* `auto` lets a wordmark take the width it needs — the strip scrolls sideways,
+                  so there is no reason to squeeze every mark into the same square. */}
+              <UniversityLogo name={u.short_name || u.name.en} logo={u.logo_url} size={40} fit="auto" className="text-xs" />
+              <Diamond aria-hidden className="size-2 shrink-0 fill-border text-border" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

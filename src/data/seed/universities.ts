@@ -1,4 +1,5 @@
 import type { University } from "@/lib/types";
+import { universityLogo } from "./university-logos";
 
 type U = Omit<University, "id" | "city" | "currency" | "status" | "logo_url" | "cover_url"> & {
   logo_url?: string | null;
@@ -10,11 +11,12 @@ const u = (x: U): University => ({
   city: "istanbul",
   currency: "USD",
   status: "published",
-  logo_url: x.logo_url ?? null,
   cover_url: x.cover_url ?? null,
   highlights: [],
   eduways_discount_pct: null,
   ...x,
+  // after the spread so the slug fallback still applies when an entry omits it
+  logo_url: x.logo_url ?? universityLogo(x.slug),
 });
 
 /**
