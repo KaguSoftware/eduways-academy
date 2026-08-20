@@ -7,7 +7,7 @@ import { Loader2, Save, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import type { FieldSpec, TableSpec } from "@/lib/admin/specs";
 import { SECTION_LABELS } from "@/lib/admin/specs";
 import { saveRecord, deleteRecord } from "@/lib/admin/actions";
-import { cn, tx, toEnglishDigits } from "@/lib/utils";
+import { cn, tx, toEnglishDigits, slugify } from "@/lib/utils";
 import { Field, Input, Textarea, Select, Switch, Tabs, TabsList, TabsTrigger, TabsContent, Dialog, DialogContent, DialogTrigger, inputClass } from "@/components/ui/primitives";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
@@ -23,15 +23,31 @@ export function RecordForm({ table, spec, initial, isNew, canDelete, readOnly }:
   const [saving, setSaving] = React.useState(false);
   const [msg, setMsg] = React.useState<{ ok: boolean; text: string } | null>(null);
   const [dirty, setDirty] = React.useState(false);
-  const set = (k: string, v: unknown) => { setRow((r) => ({ ...r, [k]: v })); setDirty(true); setMsg(null); };
+  const has = (key: string) => spec.fields.some((f) => f.key === key);
+  // Once a field is typed in directly it stops being auto-filled from the id/slug.
+  const edited = React.useRef(new Set<string>());
 
-  // Auto-suggest id from slug on create
-  React.useEffect(() => {
-    if (!isNew || !spec.idPrefix) return;
-    const slug = row.slug;
-    if (typeof slug === "string" && slug && (!row[spec.idField] || String(row[spec.idField]).startsWith(spec.idPrefix))) setRow((r) => ({ ...r, [spec.idField]: `${spec.idPrefix}${slug}` }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [row.slug]);
+  const set = (k: string, v: unknown) => {
+    edited.current.add(k);
+    setRow((r) => {
+      const next = { ...r, [k]: v };
+      if (!isNew) return next;
+      // id → slug: drop the prefix and make the rest url-safe
+      if (k === spec.idField && has("slug") && !edited.current.has("slug")) {
+        const raw = typeof v === "string" ? v : "";
+        const body = spec.idPrefix && raw.startsWith(spec.idPrefix) ? raw.slice(spec.idPrefix.length) : raw;
+        next.slug = slugify(body) || null;
+      }
+      // slug → id: keep suggesting an id while the id hasn't been typed in
+      if (k === "slug" && spec.idPrefix && !edited.current.has(spec.idField)) {
+        const slug = typeof v === "string" ? slugify(v) : "";
+        next[spec.idField] = slug ? `${spec.idPrefix}${slug}` : "";
+      }
+      return next;
+    });
+    setDirty(true);
+    setMsg(null);
+  };
 
   const missing = spec.fields.filter((f) => f.required && (row[f.key] === null || row[f.key] === undefined || row[f.key] === "" || (f.type === "i18n" && !((row[f.key] as Record<string, string>)?.fa || (row[f.key] as Record<string, string>)?.en))));
 
@@ -64,7 +80,7 @@ export function RecordForm({ table, spec, initial, isNew, canDelete, readOnly }:
             <h2 className="mb-5 text-sm font-bold uppercase tracking-wide text-brand-800">{tx(SECTION_LABELS[section], locale)}</h2>
             <div className="grid gap-5 md:grid-cols-2">
               {fields.map((f) => (
-                <div key={f.key} className={cn(["i18n-long", "i18n-md", "json"].includes(f.type) && "md:col-span-2")}>
+                <div key={f.key} className={cn(["i18n-long", "i18n-md", "i18n-list", "json"].includes(f.type) && "md:col-span-2")}>
                   <FieldControl f={f} value={row[f.key]} onChange={(v) => set(f.key, v)} disabled={readOnly || (f.readOnly && !isNew) || (f.key === spec.idField && !isNew)} locale={locale} />
                 </div>
               ))}
@@ -144,6 +160,48 @@ function I18nInput({ value, onChange, long, disabled }: { value: unknown; onChan
   );
 }
 
+/** Bilingual bullet list stored as I18nText[] — edited as plain text, one item per line. */
+function I18nListInput({ value, onChange, disabled }: { value: unknown; onChange: (v: unknown) => void; disabled?: boolean }) {
+  const toText = (v: unknown, lang: "fa" | "en") => (Array.isArray(v) ? (v as Record<string, string>[]) : []).map((it) => it?.[lang] ?? "").join("\n");
+  // Kept as raw text so blank lines and trailing spaces survive while typing; the array is rebuilt on every change.
+  const [draft, setDraft] = React.useState(() => ({ fa: toText(value, "fa"), en: toText(value, "en") }));
+  const emitted = React.useRef<string>(JSON.stringify(value ?? null));
+  React.useEffect(() => {
+    const json = JSON.stringify(value ?? null);
+    if (json === emitted.current) return;
+    emitted.current = json;
+    setDraft({ fa: toText(value, "fa"), en: toText(value, "en") });
+  }, [value]);
+
+  const setLang = (lang: "fa" | "en", text: string) => {
+    const next = { ...draft, [lang]: text };
+    setDraft(next);
+    const fa = next.fa.split("\n");
+    const en = next.en.split("\n");
+    const items = Array.from({ length: Math.max(fa.length, en.length) }, (_, i) => ({ fa: (fa[i] ?? "").trim(), en: (en[i] ?? "").trim() })).filter((it) => it.fa || it.en);
+    emitted.current = JSON.stringify(items.length ? items : null);
+    onChange(items.length ? items : null);
+  };
+
+  return (
+    <Tabs defaultValue="fa">
+      <TabsList className="mb-2 inline-flex">
+        {(["fa", "en"] as const).map((lang) => (
+          <TabsTrigger key={lang} value={lang} className="inline-flex items-center gap-1.5">
+            <span className={cn("size-1.5 rounded-full", draft[lang].trim() ? "bg-success" : "bg-border")} />
+            {lang === "fa" ? "فارسی" : "English"}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      {(["fa", "en"] as const).map((lang) => (
+        <TabsContent key={lang} value={lang} className="mt-0">
+          <Textarea value={draft[lang]} onChange={(e) => setLang(lang, e.target.value)} dir={lang === "fa" ? "rtl" : "ltr"} className={cn("min-h-28 leading-8", lang === "fa" ? "font-fa" : "font-en")} disabled={disabled} />
+        </TabsContent>
+      ))}
+    </Tabs>
+  );
+}
+
 function FieldControl({ f, value, onChange, disabled, locale }: { f: FieldSpec; value: unknown; onChange: (v: unknown) => void; disabled?: boolean; locale: string }) {
   const t = useTranslations("admin");
   const label = <span>{tx(f.label, locale)}{f.required && <span className="ms-1 text-danger">*</span>}</span>;
@@ -172,6 +230,8 @@ function FieldControl({ f, value, onChange, disabled, locale }: { f: FieldSpec; 
       return <Field label={label} hint={hint}><I18nInput value={value} onChange={onChange} disabled={disabled} /></Field>;
     case "i18n-long":
       return <Field label={label} hint={hint}><I18nInput value={value} onChange={onChange} long="long" disabled={disabled} /></Field>;
+    case "i18n-list":
+      return <Field label={label} hint={hint}><I18nListInput value={value} onChange={onChange} disabled={disabled} /></Field>;
     case "i18n-md":
       return <Field label={label} hint={hint ?? "Markdown"}><I18nInput value={value} onChange={onChange} long="md" disabled={disabled} /></Field>;
     case "json":
