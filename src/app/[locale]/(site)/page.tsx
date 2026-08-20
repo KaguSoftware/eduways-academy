@@ -32,8 +32,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   return (
     <>
       <OrganizationJsonLd settings={settings} />
-      <Hero stats={settings.stats} />
-      <TrustMarquee universities={universities.filter((u) => u.is_featured || u.editorial_score >= 80).slice(0, 14)} />
+      {/* Hero + marquee span 80% of the viewport below the sticky header. */}
+      <div className="flex min-h-[calc(80svh-3.2rem)] flex-col md:min-h-[calc(80svh-3.6rem)]">
+        <Hero stats={settings.stats} />
+        <TrustMarquee universities={universities.filter((u) => u.is_featured || u.editorial_score >= 80).slice(0, 14)} />
+      </div>
       <WhySection />
       <FeaturedUniversities universities={featured} />
       <ProcessSection />

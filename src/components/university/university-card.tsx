@@ -8,10 +8,65 @@ import { MapPin, GitCompareArrows, Check, BadgePercent, Trophy } from "lucide-re
 import type { UniversityWithRelations } from "@/lib/types";
 import { cn, formatNumber, formatRange, tx } from "@/lib/utils";
 import { Badge, Tooltip } from "@/components/ui/primitives";
+import { logoAspect, logoPlate, logoShape } from "@/data/seed/university-logos";
 import { useCompare } from "./compare-context";
 
-export function UniversityLogo({ name, logo, size = 56, className }: { name: string; logo?: string | null; size?: number; className?: string }) {
-  if (logo) return <Image src={logo} alt={name} width={size} height={size} className={cn("rounded-2xl object-contain bg-white", className)} />;
+/**
+ * Optical size-matching: a 5:1 wordmark drawn at the same cap height as a disc reads far
+ * heavier, so wide marks lose height as they gain width. Anything up to 1.5:1 is untouched.
+ */
+const opticalScale = (aspect: number) => Math.min(1, Math.sqrt(1.5 / Math.max(aspect, 1.5)));
+
+export function UniversityLogo({
+  name,
+  logo,
+  size = 56,
+  className,
+  fit = "square",
+}: {
+  name: string;
+  logo?: string | null;
+  size?: number;
+  className?: string;
+  /** `square` locks a fixed square slot so rows stay gridded; `auto` lets the slot take the
+   *  mark's own proportions — use it where the layout can spare horizontal room. */
+  fit?: "square" | "auto";
+}) {
+  // The frame follows the mark: a disc gets a round backing, a wordmark a rectangular one,
+  // and a logo that ships its own opaque background gets a plate in that colour clipped to
+  // the artwork. The image is always `object-contain`, so nothing is ever cropped — in
+  // `auto` the slot widens to meet the mark instead of squeezing the mark into a square.
+  if (logo) {
+    const shape = logoShape(logo);
+    const plate = logoPlate(logo);
+    const aspect = logoAspect(logo);
+    // Discs and near-square marks keep a square slot even in `auto`, so a round backing
+    // stays a circle rather than stretching into a pill.
+    const square = fit === "square" || shape === "round" || aspect <= 1.2;
+    const pad = plate ? 0 : Math.round(size * (fit === "auto" ? 0.1 : shape === "wide" ? 0.03 : 0.08));
+    const width = square ? size : Math.round((size - pad * 2) * opticalScale(aspect) * aspect) + pad * 2;
+    // Radius tracks the slot so a 32px marquee chip isn't rounded like a 56px card tile.
+    const radius = shape === "round" ? 9999 : Math.min(16, Math.round(size * 0.26));
+
+    return (
+      <div style={{ width, height: size }} className={cn("relative shrink-0", className)}>
+        <span
+          aria-hidden
+          style={{ borderRadius: radius, ...(plate ? { background: plate } : undefined) }}
+          className={cn("absolute inset-0", !plate && "bg-white")}
+        />
+        <Image
+          src={logo}
+          alt={name}
+          fill
+          sizes={`${width}px`}
+          // Plates are clipped to the slot so their hard corners pick up the backing radius.
+          style={{ padding: pad, borderRadius: radius }}
+          className="object-contain"
+        />
+      </div>
+    );
+  }
   const initials = name.replace(/[()]/g, "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
   return (
     <div style={{ width: size, height: size }} className={cn("flex shrink-0 items-center justify-center rounded-2xl bg-brand-gradient font-en text-lg font-extrabold text-white shadow-sm", className)} aria-hidden>
