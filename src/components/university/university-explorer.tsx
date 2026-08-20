@@ -4,16 +4,27 @@ import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X, ArrowDownAZ, ArrowDownNarrowWide, ArrowUpNarrowWide, Sparkles, Trophy, Layers } from "lucide-react";
 import type { UniversityWithRelations, District, Category } from "@/lib/types";
 import { cn, formatUSD, tx } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Select, Segmented, Slider, SearchInput, Badge, Empty, Dialog, DialogContent, DialogTrigger, DialogClose, Checkbox, FilterGroup, FilterPill } from "@/components/ui/primitives";
 import { UniversityCard } from "./university-card";
+import { DynamicIcon } from "@/components/home/sections";
 
 type Sort = "score" | "tuitionAsc" | "tuitionDesc" | "rank" | "name";
 type Type = "all" | "public" | "foundation";
 type Side = "all" | "european" | "asian";
+
+/** Select option row: leading icon + label, matching the programs sort menu. */
+function OptionRow({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      <span className="flex size-5 shrink-0 items-center justify-center">{icon}</span>
+      <span className="truncate">{label}</span>
+    </span>
+  );
+}
 
 const TUITION_MIN = 1000;
 const TUITION_MAX = 35000;
@@ -135,6 +146,7 @@ export function UniversityExplorer({ universities, districts, categories }: { un
     <div className="flex flex-col gap-4">
       <FilterGroup title={t("universities.filterType")}>
         <Segmented
+          animated
           value={f.type}
           onChange={(v) => set("type", v)}
           className="w-full [&>button]:flex-1"
@@ -149,6 +161,7 @@ export function UniversityExplorer({ universities, districts, categories }: { un
 
       <FilterGroup title={t("universities.filterSide")}>
         <Segmented
+          animated
           value={f.side}
           onChange={(v) => set("side", v)}
           className="w-full [&>button]:flex-1"
@@ -163,6 +176,7 @@ export function UniversityExplorer({ universities, districts, categories }: { un
 
       <FilterGroup title={t("universities.filterLanguage")}>
         <Segmented
+          animated
           value={f.lang}
           onChange={(v) => set("lang", v)}
           className="w-full [&>button]:flex-1"
@@ -171,6 +185,26 @@ export function UniversityExplorer({ universities, districts, categories }: { un
             { value: "all", label: t("common.all") },
             { value: "en", label: t("common.en") },
             { value: "tr", label: t("common.tr") },
+          ]}
+        />
+      </FilterGroup>
+
+      <FilterGroup title={t("programs.field")}>
+        <Select
+          size="sm"
+          ariaLabel={t("programs.field")}
+          value={f.category}
+          onValueChange={(v) => set("category", v)}
+          options={[
+            { value: "all", label: <OptionRow icon={<Layers className="size-4 text-brand-600" />} label={t("universities.allFields")} /> },
+            ...categories.map((c) => {
+              const n = countFor("category", (u) => u.programs.some((p) => p.category_id === c.id));
+              return {
+                value: c.id,
+                label: <OptionRow icon={<DynamicIcon name={c.icon ?? "Sparkles"} className="size-4 text-brand-600" />} label={`${tx(c.name, locale)} · ${n}`} />,
+                disabled: n === 0,
+              };
+            }),
           ]}
         />
       </FilterGroup>
@@ -186,22 +220,6 @@ export function UniversityExplorer({ universities, districts, categories }: { un
             ...districts.map((d) => {
               const n = countFor("district", (u) => u.district?.slug === d.slug);
               return { value: d.slug, label: `${tx(d.name, locale)} · ${n}`, disabled: n === 0 };
-            }),
-          ]}
-        />
-      </FilterGroup>
-
-      <FilterGroup title={t("programs.field")}>
-        <Select
-          size="sm"
-          ariaLabel={t("programs.field")}
-          value={f.category}
-          onValueChange={(v) => set("category", v)}
-          options={[
-            { value: "all", label: t("universities.allFields") },
-            ...categories.map((c) => {
-              const n = countFor("category", (u) => u.programs.some((p) => p.category_id === c.id));
-              return { value: c.id, label: `${tx(c.name, locale)} · ${n}`, disabled: n === 0 };
             }),
           ]}
         />
@@ -275,12 +293,12 @@ export function UniversityExplorer({ universities, districts, categories }: { un
               />
             </div>
             <div className="flex items-center gap-2">
-              <Select size="sm" ariaLabel={t("common.sortBy")} value={sort} onValueChange={(v) => setSort(v as Sort)} className="w-44" options={[
-                { value: "score", label: t("universities.sortScore") },
-                { value: "rank", label: t("universities.sortRank") },
-                { value: "tuitionAsc", label: t("universities.sortTuitionAsc") },
-                { value: "tuitionDesc", label: t("universities.sortTuitionDesc") },
-                { value: "name", label: t("universities.sortName") },
+              <Select size="sm" ariaLabel={t("common.sortBy")} value={sort} onValueChange={(v) => setSort(v as Sort)} className="w-52" options={[
+                { value: "score", label: <OptionRow icon={<Sparkles className="size-4 text-brand-600" />} label={t("universities.sortScore")} /> },
+                { value: "name", label: <OptionRow icon={<ArrowDownAZ className="size-4 text-brand-600" />} label={t("universities.sortName")} /> },
+                { value: "rank", label: <OptionRow icon={<Trophy className="size-4 text-brand-600" />} label={t("universities.sortRank")} /> },
+                { value: "tuitionAsc", label: <OptionRow icon={<ArrowDownNarrowWide className="size-4 text-brand-600" />} label={t("universities.sortTuitionAsc")} /> },
+                { value: "tuitionDesc", label: <OptionRow icon={<ArrowUpNarrowWide className="size-4 text-brand-600" />} label={t("universities.sortTuitionDesc")} /> },
               ]} />
               <Dialog>
                 <DialogTrigger asChild>

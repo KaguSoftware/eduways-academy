@@ -174,20 +174,47 @@ export function RadioItem({ className, label, description, ...props }: React.Com
 }
 
 /** Segmented control: branded alternative to radio buttons for 2–4 options. */
-export function Segmented<T extends string>({ value, onChange, options, className, size = "md", ariaLabel }: { value: T; onChange: (v: T) => void; options: { value: T; label: React.ReactNode }[]; className?: string; size?: "sm" | "md"; ariaLabel?: string }) {
+export function Segmented<T extends string>({ value, onChange, options, className, size = "md", ariaLabel, animated = false }: { value: T; onChange: (v: T) => void; options: { value: T; label: React.ReactNode }[]; className?: string; size?: "sm" | "md"; ariaLabel?: string; animated?: boolean }) {
+  const listRef = React.useRef<HTMLDivElement>(null);
+  const [thumb, setThumb] = React.useState<{ left: number; width: number } | null>(null);
+
+  // Measure the active button so one shared pill can slide between options.
+  React.useLayoutEffect(() => {
+    if (!animated) return;
+    const list = listRef.current;
+    if (!list) return;
+    const measure = () => {
+      const active = list.querySelector<HTMLButtonElement>('[data-active="true"]');
+      if (active) setThumb({ left: active.offsetLeft, width: active.offsetWidth });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(list);
+    return () => ro.disconnect();
+  }, [animated, value, options]);
+
   return (
-    <div role="radiogroup" aria-label={ariaLabel} className={cn("inline-flex rounded-full border border-border bg-surface p-1", className)}>
+    <div ref={listRef} role="radiogroup" aria-label={ariaLabel} className={cn("relative inline-flex rounded-full border border-border bg-surface p-1", className)}>
+      {animated && thumb && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-1 left-0 rounded-full bg-background shadow-sm transition-[transform,width] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
+          style={{ width: thumb.width, transform: `translateX(${thumb.left}px)` }}
+        />
+      )}
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
           role="radio"
           aria-checked={value === o.value}
+          data-active={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "rounded-full font-medium transition-all focus-ring",
+            "relative z-10 rounded-full font-medium focus-ring",
+            animated ? "transition-colors duration-200" : "transition-all",
             size === "sm" ? "px-3 py-1 text-xs" : "px-4 py-1.5 text-sm",
-            value === o.value ? "bg-background text-brand-800 shadow-sm" : "text-muted hover:text-foreground",
+            value === o.value ? (animated ? "text-brand-800" : "bg-background text-brand-800 shadow-sm") : "text-muted hover:text-foreground",
           )}
         >
           {o.label}
