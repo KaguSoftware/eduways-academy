@@ -200,7 +200,13 @@
     "englishTaught": "English programs",
     "featured": "Featured",
     "highlights": "Highlights",
-    "eduwaysDiscount": "Eduways students get up to {pct}% off tuition here."
+    "eduwaysDiscount": "Eduways students get up to {pct}% off tuition here.",
+    "allDistricts": "All districts",
+    "allFields": "All fields",
+    "anyTuition": "Any tuition",
+    "filterCampus": "Campus",
+    "showResults": "Show {count, plural, one {# result} other {# results}}",
+    "filterTuitionShort": "Tuition"
   },
   "programs": {
     "title": "Programs",

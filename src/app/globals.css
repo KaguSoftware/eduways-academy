@@ -131,6 +131,22 @@ html[dir="ltr"] .font-fa { font-family: var(--font-fa); }
 .scrollbar-none { scrollbar-width: none; }
 .scrollbar-none::-webkit-scrollbar { display: none; }
 
+/* Quiet scrollbar for panels that scroll inside their own bordered box:
+   slim, neutral, and only visible while the pointer is over the panel. */
+.scrollbar-subtle { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.scrollbar-subtle:hover, .scrollbar-subtle:focus-within { scrollbar-color: var(--border) transparent; }
+.scrollbar-subtle::-webkit-scrollbar { width: 6px; height: 6px; }
+.scrollbar-subtle::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-subtle::-webkit-scrollbar-thumb {
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+.scrollbar-subtle:hover::-webkit-scrollbar-thumb,
+.scrollbar-subtle:focus-within::-webkit-scrollbar-thumb { background: color-mix(in oklab, var(--muted) 35%, transparent); }
+.scrollbar-subtle::-webkit-scrollbar-thumb:hover { background: color-mix(in oklab, var(--muted) 55%, transparent); }
+
 /* Kill native number spinners / search decorations (we ship custom controls) */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }

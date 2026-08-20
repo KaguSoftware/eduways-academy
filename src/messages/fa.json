@@ -201,7 +201,13 @@
     "englishTaught": "رشته‌های انگلیسی",
     "featured": "منتخب",
     "highlights": "نکات برجسته",
-    "eduwaysDiscount": "دانشجویان ادیوویز در این دانشگاه تا {pct}٪ تخفیف شهریه می‌گیرند."
+    "eduwaysDiscount": "دانشجویان ادیوویز در این دانشگاه تا {pct}٪ تخفیف شهریه می‌گیرند.",
+    "allDistricts": "همه مناطق",
+    "allFields": "همه رشته‌ها",
+    "anyTuition": "بدون محدودیت شهریه",
+    "filterCampus": "امکانات",
+    "showResults": "نمایش {count, plural, one {# نتیجه} other {# نتیجه}}",
+    "filterTuitionShort": "شهریه"
   },
   "programs": {
     "title": "رشته‌ها",
