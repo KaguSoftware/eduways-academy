@@ -50,7 +50,7 @@ export default async function RankingsPage({ params }: { params: Promise<{ local
             <h2 className="text-lg font-bold">{t("rankings.byField")}</h2>
             <p className="mt-1 text-sm text-muted">{t("rankings.byFieldHint")}</p>
           </div>
-          <FieldSelect categories={categories} locale={loc} placeholder={t("rankings.byFieldPlaceholder")} ariaLabel={t("rankings.byField")} className="w-full sm:w-72" />
+          <FieldSelect categories={categories} locale={loc} placeholder={t("rankings.byFieldPlaceholder")} allLabel={t("rankings.allFields")} ariaLabel={t("rankings.byField")} className="w-full sm:w-72" />
         </div>
       </section>
 
