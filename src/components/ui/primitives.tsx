@@ -355,13 +355,15 @@ export function ScrollArea({ className, children, orientation = "vertical", ...p
 }
 
 /* ───────────────────────── Misc ───────────────────────── */
-export function Badge({ className, variant = "default", ...props }: React.HTMLAttributes<HTMLSpanElement> & { variant?: "default" | "brand" | "accent" | "success" | "warning" | "outline" | "dark" }) {
+export function Badge({ className, variant = "default", ...props }: React.HTMLAttributes<HTMLSpanElement> & { variant?: "default" | "brand" | "accent" | "success" | "warning" | "danger" | "purple" | "outline" | "dark" }) {
   const v = {
     default: "bg-surface-2 text-foreground",
     brand: "bg-brand-50 text-brand-800",
     accent: "bg-accent-500/15 text-accent-600",
     success: "bg-success/10 text-success",
     warning: "bg-warning/15 text-warning",
+    danger: "bg-danger/10 text-danger",
+    purple: "bg-purple/15 text-purple",
     outline: "border border-border text-muted",
     dark: "bg-brand-900 text-white",
   }[variant];
@@ -372,7 +374,7 @@ export function Skeleton({ className }: { className?: string }) {
   return <div className={cn("animate-pulse rounded-xl bg-surface-2", className)} />;
 }
 
-export function SearchInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+export function SearchInput(props: React.InputHTMLAttributes<HTMLInputElement> & { endIcon?: React.ReactNode }) {
   return <Input startIcon={<Search />} type="search" {...props} />;
 }
 

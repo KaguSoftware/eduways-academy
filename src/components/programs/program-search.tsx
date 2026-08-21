@@ -30,6 +30,7 @@ export function ProgramSearch({
   onPick,
   suggestions,
   placeholder,
+  count,
   className,
 }: {
   value: string;
@@ -37,6 +38,8 @@ export function ProgramSearch({
   onPick: (s: Suggestion) => void;
   suggestions: Suggestion[];
   placeholder?: string;
+  /** result count, shown as a pill inside the trailing edge of the box */
+  count?: React.ReactNode;
   className?: string;
 }) {
   const t = useTranslations();
@@ -116,6 +119,16 @@ export function ProgramSearch({
         aria-autocomplete="list"
         aria-activedescendant={show && active >= 0 ? `${id}-opt-${active}` : undefined}
         autoComplete="off"
+        endIcon={
+          count != null ? (
+            <span className="pointer-events-none flex items-center gap-3">
+              <span aria-hidden className="h-5 w-px bg-border" />
+              <span className="whitespace-nowrap text-xs text-muted">{count}</span>
+            </span>
+          ) : undefined
+        }
+        // the count is wider than the icon-sized slot `endIcon` pads for
+        className={count != null ? "pe-32" : undefined}
       />
       {show && (
         <ul

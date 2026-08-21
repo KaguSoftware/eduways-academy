@@ -30,6 +30,7 @@
   --success: #12935f;
   --warning: #d98c0e;
   --danger: #d6404f;
+  --purple: #7c4dcc;
 
   --radius: 1rem;
   --shadow-sm: 0 1px 2px rgb(14 42 92 / 0.06);
@@ -73,6 +74,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-purple: var(--purple);
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-fa: var(--font-vazirmatn), var(--font-inter), system-ui, sans-serif;

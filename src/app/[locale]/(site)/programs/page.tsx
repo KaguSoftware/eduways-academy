@@ -23,7 +23,7 @@ export default async function ProgramsPage({ params }: { params: Promise<{ local
   const rows = programs.map((p) => ({ ...p, faculty: { fa: "", en: "" }, university: { id: p.university.id, slug: p.university.slug, name: p.university.name, short_name: p.university.short_name, type: p.university.type, logo_url: p.university.logo_url } }));
   return (
     <>
-      <PageHeader eyebrow={`${programs.length}+`} title={t("title")} subtitle={t("subtitle")} />
+      <PageHeader title={t("title")} subtitle={t("subtitle")} />
       <Suspense fallback={<div className="container-x py-10"><Skeleton className="h-96" /></div>}>
         <ProgramExplorer programs={rows} categories={categories} universities={universities.map((u) => ({ id: u.id, slug: u.slug, name: u.name }))} />
       </Suspense>
