@@ -193,13 +193,33 @@ export function ProgramExplorer({ programs, categories, universities }: { progra
             ]}
           />
         </Filter>
-        <div className="flex flex-wrap items-center gap-3 md:col-span-2">
-          <Segmented size="sm" ariaLabel={t("programs.level")} value={level} onChange={setLevel} options={[{ value: "all", label: t("common.all") }, ...LEVELS.map((l) => ({ value: l, label: t(`common.${l}`) }))]} />
-          <Segmented size="sm" ariaLabel={t("programs.language")} value={lang} onChange={setLang} options={[{ value: "all", label: t("common.all") }, { value: "en", label: t("common.en") }, { value: "tr", label: t("common.tr") }]} />
-        </div>
         <Filter label={t("programs.tuition")} value={isFullRange ? t("common.all") : formatRange(range[0], range[1], locale)}>
           <Slider value={range} onValueChange={([lo, hi]) => setRange([lo, hi])} min={TUITION_MIN} max={TUITION_MAX} step={500} minStepsBetweenThumbs={1} />
         </Filter>
+        {/* Below md these two are dropdowns: the segmented pills overflow a phone's width
+            once "PhD" and the language options are laid out side by side. */}
+        <div className="grid grid-cols-2 gap-3 md:hidden">
+          <Filter label={t("programs.level")}>
+            <Select
+              ariaLabel={t("programs.level")}
+              value={level}
+              onValueChange={(v) => setLevel(v as never)}
+              options={[{ value: "all", label: t("common.all") }, ...LEVELS.map((l) => ({ value: l, label: t(`common.${l}`) }))]}
+            />
+          </Filter>
+          <Filter label={t("programs.language")}>
+            <Select
+              ariaLabel={t("programs.language")}
+              value={lang}
+              onValueChange={(v) => setLang(v as never)}
+              options={[{ value: "all", label: t("common.all") }, { value: "en", label: t("common.en") }, { value: "tr", label: t("common.tr") }]}
+            />
+          </Filter>
+        </div>
+        <div className="hidden flex-wrap items-center gap-3 md:col-span-2 md:flex">
+          <Segmented size="sm" ariaLabel={t("programs.level")} value={level} onChange={setLevel} options={[{ value: "all", label: t("common.all") }, ...LEVELS.map((l) => ({ value: l, label: t(`common.${l}`) }))]} />
+          <Segmented size="sm" ariaLabel={t("programs.language")} value={lang} onChange={setLang} options={[{ value: "all", label: t("common.all") }, { value: "en", label: t("common.en") }, { value: "tr", label: t("common.tr") }]} />
+        </div>
       </div>
 
       {list.length === 0 ? (
