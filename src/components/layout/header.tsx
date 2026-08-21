@@ -229,7 +229,7 @@ function MobilePanel({ open, onNavigate, isActive }: { open: boolean; onNavigate
             );
           })}
         </nav>
-        <div className="shrink-0 border-t border-border bg-background ps-6 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pe-[5.5rem]">
+        <div className="shrink-0 bg-background ps-6 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pe-[5.5rem]">
           <Button asChild size="lg" className="w-full">
             <Link href="/consultation" onClick={onNavigate} tabIndex={open ? undefined : -1} className="rtl:flex-row-reverse">
               <Speech className="size-4" />
