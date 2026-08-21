@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { publicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hydrate } from "./compute";
+import { byId } from "@/lib/utils";
 import { applyUniversityFilters, applyProgramFilters } from "./seed";
 import { siteSettings as defaultSettings } from "@/data/seed/content";
 
@@ -111,7 +112,7 @@ export const supabaseRepo: Repo = {
   },
   async listPosts() {
     const sb = publicClient();
-    return (await sb.from("posts").select("*").order("published_at", { ascending: false })).data ?? [];
+    return ((await sb.from("posts").select("*")).data ?? []).sort(byId);
   },
   async getPost(slug) {
     const sb = publicClient();

@@ -1,6 +1,7 @@
 import type { Repo, UniversityFilters, ProgramFilters } from "./types";
 import type { Lead, Program, University, UniversityWithRelations } from "@/lib/types";
 import { hydrate } from "./compute";
+import { byId } from "@/lib/utils";
 import { categories } from "@/data/seed/categories";
 import { districts } from "@/data/seed/districts";
 import { universities } from "@/data/seed/universities";
@@ -72,7 +73,7 @@ export const seedRepo: Repo = {
     const s = stories.find((x) => x.slug === slug);
     return s ? { ...s, university: universities.find((u) => u.id === s.university_id) } : null;
   },
-  async listPosts() { return [...posts].sort((a, b) => b.published_at.localeCompare(a.published_at)); },
+  async listPosts() { return [...posts].sort(byId); },
   async getPost(slug) { return posts.find((p) => p.slug === slug) ?? null; },
   async listFaqs() { return [...faqs].sort((a, b) => a.order - b.order); },
   async createLead(lead: Lead) {

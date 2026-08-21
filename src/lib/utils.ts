@@ -45,6 +45,11 @@ export function formatDate(iso: string | Date, locale: string) {
   }).format(d);
 }
 
+/** Natural (numeric-aware) id sort: post-2 before post-10. */
+export function byId<T extends { id: string }>(a: T, b: T) {
+  return a.id.localeCompare(b.id, "en", { numeric: true, sensitivity: "base" });
+}
+
 export function toEnglishDigits(s: string) {
   return s.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
 }
