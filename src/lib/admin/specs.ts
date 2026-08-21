@@ -4,13 +4,20 @@
  */
 import type { I18nText } from "@/lib/utils";
 
-export type FieldType = "text" | "i18n" | "i18n-long" | "i18n-md" | "i18n-list" | "number" | "boolean" | "select" | "date" | "tags" | "json";
+export type FieldType = "text" | "i18n" | "i18n-long" | "i18n-md" | "i18n-list" | "number" | "boolean" | "select" | "ref" | "date" | "tags" | "json";
+
+/** Tables a `ref` field can point at — the picker lists their rows so foreign keys stay valid. */
+export type RefSource = "districts" | "universities" | "categories";
+
+export interface RefOption { value: string; label: string }
 
 export interface FieldSpec {
   key: string;
   label: I18nText;
   type: FieldType;
   options?: { value: string; label: I18nText }[];
+  ref?: RefSource; // for type "ref": which table to pick an existing row from
+  wordsOnly?: boolean; // for type "tags": only letters, digits, spaces and the "," separator can be typed
   required?: boolean;
   readOnly?: boolean;
   help?: I18nText;
@@ -48,7 +55,7 @@ export const TABLES: Record<string, TableSpec> = {
       f("name", "نام", "Name", "i18n", { required: true, section: "basic" }),
       f("short_name", "نام کوتاه", "Short name", "text", { section: "basic" }),
       f("type", "نوع", "Type", "select", { options: [{ value: "public", label: L("دولتی", "Public") }, { value: "foundation", label: L("خصوصی", "Private (foundation)") }], required: true, section: "basic" }),
-      f("district_id", "شناسه منطقه", "District ID", "text", { help: L("مثلاً dist-besiktas", "e.g. dist-besiktas"), section: "basic" }),
+      f("district_id", "منطقه", "District", "ref", { ref: "districts", help: L("از میان مناطق ثبت‌شده انتخاب کنید", "pick an existing district"), section: "basic" }),
       f("status", "وضعیت", "Status", "select", { options: STATUS, section: "basic" }),
       f("is_featured", "منتخب", "Featured", "boolean", { section: "basic" }),
       f("description", "معرفی", "Description", "i18n-long", { section: "content" }),
@@ -56,7 +63,7 @@ export const TABLES: Record<string, TableSpec> = {
       f("website", "وب‌سایت", "Website", "text", { section: "content" }),
       f("logo_url", "آدرس لوگو", "Logo URL", "text", { section: "content" }),
       f("cover_url", "آدرس تصویر کاور", "Cover URL", "text", { section: "content" }),
-      f("languages", "زبان‌های تدریس", "Languages", "tags", { help: L("با کاما جدا کنید: tr, en", "comma separated: tr, en"), section: "numbers" }),
+      f("languages", "زبان‌های تدریس", "Languages", "tags", { wordsOnly: true, help: L("فقط با کاما جدا کنید: tr, en", "separate with commas only: tr, en"), section: "numbers" }),
       f("avg_tuition_min", "حداقل شهریه (دلار)", "Tuition min (USD)", "number", { section: "numbers" }),
       f("avg_tuition_max", "حداکثر شهریه (دلار)", "Tuition max (USD)", "number", { section: "numbers" }),
       f("eduways_discount_pct", "درصد تخفیف ادیوویز", "Eduways discount %", "number", { section: "numbers" }),
@@ -73,12 +80,12 @@ export const TABLES: Record<string, TableSpec> = {
     listFields: ["university_id", "level", "language", "tuition_usd"], orderBy: "university_id", orderAsc: true, canCreate: true,
     fields: [
       f("id", "شناسه", "ID", "text", { required: true, section: "basic" }),
-      f("university_id", "شناسه دانشگاه", "University ID", "text", { required: true, section: "basic", help: L("مثلاً uni-koc-university", "e.g. uni-koc-university") }),
+      f("university_id", "دانشگاه", "University", "ref", { ref: "universities", required: true, section: "basic" }),
       f("slug", "اسلاگ", "Slug", "text", { required: true, section: "basic" }),
       f("name", "نام رشته", "Name", "i18n", { required: true, section: "basic" }),
       f("level", "مقطع", "Level", "select", { options: LEVELS, section: "basic" }),
       f("language", "زبان", "Language", "select", { options: LANGS, section: "basic" }),
-      f("category_id", "شناسه حوزه", "Category ID", "text", { help: L("مثلاً cat-engineering", "e.g. cat-engineering"), section: "basic" }),
+      f("category_id", "حوزه", "Category", "ref", { ref: "categories", section: "basic" }),
       f("faculty", "دانشکده", "Faculty", "i18n", { section: "content" }),
       f("tuition_note", "توضیح شهریه", "Tuition note", "i18n", { section: "content" }),
       f("duration_years", "مدت (سال)", "Duration (years)", "number", { section: "numbers" }),
@@ -90,7 +97,7 @@ export const TABLES: Record<string, TableSpec> = {
     listFields: ["university_id", "discount_pct", "type", "valid_until"], canCreate: true,
     fields: [
       f("id", "شناسه", "ID", "text", { required: true, section: "basic" }),
-      f("university_id", "شناسه دانشگاه (خالی = عمومی)", "University ID (empty = global)", "text", { section: "basic" }),
+      f("university_id", "دانشگاه (خالی = عمومی)", "University (empty = global)", "ref", { ref: "universities", section: "basic" }),
       f("title", "عنوان", "Title", "i18n", { required: true, section: "basic" }),
       f("type", "نوع", "Type", "select", { options: [{ value: "university", label: L("دانشگاه", "University") }, { value: "eduways", label: L("ادیوویز", "Eduways") }, { value: "government", label: L("دولتی", "Government") }], section: "basic" }),
       f("discount_pct", "درصد تخفیف", "Discount %", "number", { section: "numbers" }),
@@ -103,7 +110,7 @@ export const TABLES: Record<string, TableSpec> = {
     listFields: ["source", "year", "rank_national", "rank_world"], canCreate: true,
     fields: [
       f("id", "شناسه", "ID", "text", { required: true, section: "basic" }),
-      f("university_id", "شناسه دانشگاه", "University ID", "text", { required: true, section: "basic" }),
+      f("university_id", "دانشگاه", "University", "ref", { ref: "universities", required: true, section: "basic" }),
       f("source", "منبع", "Source", "select", { options: ["urap", "the", "qs", "eduways"].map((v) => ({ value: v, label: L(v.toUpperCase(), v.toUpperCase()) })), section: "basic" }),
       f("year", "سال", "Year", "number", { section: "numbers" }),
       f("rank_national", "رتبه ملی", "National rank", "number", { section: "numbers" }),
@@ -148,7 +155,7 @@ export const TABLES: Record<string, TableSpec> = {
       f("id", "شناسه", "ID", "text", { required: true, section: "basic" }),
       f("slug", "اسلاگ", "Slug", "text", { required: true, section: "basic" }),
       f("student_name", "نام دانشجو", "Student name", "text", { required: true, section: "basic" }),
-      f("university_id", "شناسه دانشگاه", "University ID", "text", { section: "basic" }),
+      f("university_id", "دانشگاه", "University", "ref", { ref: "universities", section: "basic" }),
       f("country", "کد کشور", "Country code", "text", { section: "basic", help: L("IR, AF, TJ…", "IR, AF, TJ…") }),
       f("status", "وضعیت", "Status", "select", { options: STATUS, section: "basic" }),
       f("program", "رشته", "Program", "i18n", { section: "content" }),
