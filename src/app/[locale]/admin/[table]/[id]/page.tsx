@@ -23,7 +23,7 @@ const PUBLIC_PATH: Record<string, (row: Record<string, unknown>) => string | nul
 export default async function AdminRecordPage({ params }: { params: Promise<{ locale: string; table: string; id: string }> }) {
   const { locale, table, id: rawId } = await params;
   setRequestLocale(locale);
-  const staff = await requireStaff(locale);
+  await requireStaff(locale);
   const t = await getTranslations("admin");
   const spec = TABLES[table];
   if (!spec) notFound();
@@ -50,7 +50,7 @@ export default async function AdminRecordPage({ params }: { params: Promise<{ lo
         </div>
         {publicHref && <Link href={publicHref as never} target="_blank" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline"><ExternalLink className="size-4" />{t("view")}</Link>}
       </div>
-      <RecordForm table={table} spec={spec} initial={row} refOptions={refOptions} isNew={isNew} canDelete={staff.role === "admin"} readOnly={!hasSupabase} />
+      <RecordForm table={table} spec={spec} initial={row} refOptions={refOptions} isNew={isNew} readOnly={!hasSupabase} />
     </div>
   );
 }

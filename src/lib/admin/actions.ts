@@ -37,9 +37,9 @@ export async function saveRecord(table: string, record: Record<string, unknown>)
 }
 
 export async function deleteRecord(table: string, id: string): Promise<ActionResult> {
+  // Any signed-in staff member may delete; the form guards the action with a type-the-id confirm.
   const staff = await getStaff();
   if (!staff) return { ok: false, error: "unauthorized" };
-  if (staff.role !== "admin") return { ok: false, error: "admin_only" };
   if (!hasSupabase) return { ok: false, error: "no_db" };
   const spec = TABLES[table];
   if (!spec) return { ok: false, error: "unknown_table" };
