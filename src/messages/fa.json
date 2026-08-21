@@ -473,6 +473,14 @@
     "deleteConfirmLabel": "برای تأیید، شناسه را بنویسید",
     "deleteConfirmHint": "دقیقاً {id} را بنویسید.",
     "deleting": "در حال حذف…",
-    "cancel": "انصراف"
+    "cancel": "انصراف",
+    "step": "مرحله",
+    "addStep": "افزودن مرحله",
+    "removeStep": "حذف مرحله",
+    "moveUp": "انتقال به بالا",
+    "moveDown": "انتقال به پایین",
+    "stepTitle": "عنوان مرحله",
+    "stepBody": "توضیح مرحله",
+    "noSteps": "هنوز مرحله‌ای اضافه نشده است."
   }
 }

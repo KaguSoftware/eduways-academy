@@ -4,7 +4,7 @@
  */
 import type { I18nText } from "@/lib/utils";
 
-export type FieldType = "text" | "i18n" | "i18n-long" | "i18n-md" | "i18n-list" | "number" | "boolean" | "select" | "ref" | "date" | "tags" | "json";
+export type FieldType = "text" | "i18n" | "i18n-long" | "i18n-md" | "i18n-list" | "number" | "boolean" | "select" | "ref" | "date" | "tags" | "steps" | "json";
 
 /** Tables a `ref` field can point at — the picker lists their rows so foreign keys stay valid. */
 export type RefSource = "districts" | "universities" | "categories";
@@ -145,7 +145,7 @@ export const TABLES: Record<string, TableSpec> = {
       f("summary", "خلاصه", "Summary", "i18n-long", { section: "content" }),
       f("body", "متن", "Body", "i18n-long", { section: "content" }),
       f("price_note", "توضیح هزینه", "Price note", "i18n", { section: "content" }),
-      f("steps", "مراحل", "Steps", "json", { help: L("آرایه JSON از {title:{fa,en}, body:{fa,en}}", "JSON array of {title:{fa,en}, body:{fa,en}}"), section: "content" }),
+      f("steps", "مراحل", "Steps", "steps", { help: L("مراحل انجام خدمت را یکی‌یکی اضافه کنید", "Add the steps of this service one by one"), section: "content" }),
     ],
   },
   stories: {

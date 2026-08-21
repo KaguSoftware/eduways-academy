@@ -472,6 +472,14 @@
     "deleteConfirmLabel": "Type the id to confirm",
     "deleteConfirmHint": "Type {id} exactly.",
     "deleting": "Deleting…",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "step": "Step",
+    "addStep": "Add step",
+    "removeStep": "Remove step",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "stepTitle": "Step title",
+    "stepBody": "Step description",
+    "noSteps": "No steps added yet."
   }
 }

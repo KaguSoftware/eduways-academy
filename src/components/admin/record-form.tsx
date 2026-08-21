@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { Loader2, Save, Trash2, CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
+import { Loader2, Save, Trash2, CheckCircle2, AlertCircle, AlertTriangle, Plus, ArrowUp, ArrowDown, X } from "lucide-react";
 import type { FieldSpec, RefOption, TableSpec } from "@/lib/admin/specs";
 import { SECTION_LABELS } from "@/lib/admin/specs";
 import { saveRecord, deleteRecord } from "@/lib/admin/actions";
@@ -84,7 +84,7 @@ export function RecordForm({ table, spec, initial, refOptions, isNew, readOnly }
             <h2 className="mb-5 text-sm font-bold uppercase tracking-wide text-brand-800">{tx(SECTION_LABELS[section], locale)}</h2>
             <div className="grid gap-5 md:grid-cols-2">
               {fields.map((f) => (
-                <div key={f.key} className={cn(["i18n-long", "i18n-md", "i18n-list", "json"].includes(f.type) && "md:col-span-2")}>
+                <div key={f.key} className={cn(["i18n-long", "i18n-md", "i18n-list", "json", "steps"].includes(f.type) && "md:col-span-2")}>
                   <FieldControl f={f} value={row[f.key]} refOptions={refOptions?.[f.key]} onChange={(v) => set(f.key, v)} disabled={readOnly || (f.readOnly && !isNew) || (f.key === spec.idField && !isNew)} locale={locale} />
                 </div>
               ))}
@@ -235,6 +235,8 @@ function FieldControl({ f, value, refOptions, onChange, disabled, locale }: { f:
       return <Field label={label} hint={hint}><I18nListInput value={value} onChange={onChange} disabled={disabled} /></Field>;
     case "i18n-md":
       return <Field label={label} hint={hint ?? "Markdown"}><I18nInput value={value} onChange={onChange} long="md" disabled={disabled} /></Field>;
+    case "steps":
+      return <Field label={label} hint={hint}><StepsInput value={value} onChange={onChange} disabled={disabled} /></Field>;
     case "json":
       return <JsonField label={label} value={value} onChange={onChange} disabled={disabled} help={hint} />;
   }
@@ -349,6 +351,99 @@ function TagsInput({ value, onChange, disabled, wordsOnly }: { value: unknown; o
         onChange(items.length ? items : null);
       }}
     />
+  );
+}
+
+/**
+ * Ordered, bilingual step list stored as {title:{fa,en}, body:{fa,en}}[] — edited as real
+ * fields instead of raw JSON. One language toggle drives every step so the editor stays calm.
+ */
+type Step = { title: Record<string, string>; body: Record<string, string> };
+const emptyStep = (): Step => ({ title: { fa: "", en: "" }, body: { fa: "", en: "" } });
+const asSteps = (v: unknown): Step[] =>
+  (Array.isArray(v) ? v : []).map((it) => {
+    const o = (it && typeof it === "object" ? it : {}) as Record<string, unknown>;
+    const part = (k: "title" | "body") => {
+      const x = o[k];
+      if (typeof x === "string") return { fa: x, en: "" };
+      const r = (x && typeof x === "object" ? x : {}) as Record<string, string>;
+      return { fa: r.fa ?? "", en: r.en ?? "" };
+    };
+    return { title: part("title"), body: part("body") };
+  });
+
+function StepsInput({ value, onChange, disabled }: { value: unknown; onChange: (v: unknown) => void; disabled?: boolean }) {
+  const t = useTranslations("admin");
+  const [lang, setLang] = React.useState<"fa" | "en">("fa");
+  const steps = React.useMemo(() => asSteps(value), [value]);
+
+  const emit = (next: Step[]) => {
+    // Blank rows are kept while editing (a step the user just added is empty by definition);
+    // only an entirely empty list collapses back to null.
+    const any = next.some((s) => s.title.fa || s.title.en || s.body.fa || s.body.en);
+    onChange(next.length && any ? next : null);
+  };
+  const patch = (i: number, key: "title" | "body", text: string) =>
+    emit(steps.map((s, idx) => (idx === i ? { ...s, [key]: { ...s[key], [lang]: text } } : s)));
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= steps.length) return;
+    const next = [...steps];
+    [next[i], next[j]] = [next[j], next[i]];
+    emit(next);
+  };
+
+  return (
+    <div className="space-y-3">
+      <Tabs value={lang} onValueChange={(v) => setLang(v as "fa" | "en")}>
+        <TabsList className="inline-flex">
+          {(["fa", "en"] as const).map((l) => (
+            <TabsTrigger key={l} value={l} className="inline-flex items-center gap-1.5">
+              <span className={cn("size-1.5 rounded-full", steps.some((s) => s.title[l]?.trim() || s.body[l]?.trim()) ? "bg-success" : "bg-border")} />
+              {l === "fa" ? "فارسی" : "English"}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+
+      {steps.length === 0 && <p className="text-xs text-muted">{t("noSteps")}</p>}
+
+      <ol className="space-y-3">
+        {steps.map((s, i) => (
+          <li key={i} className="rounded-xl border border-border bg-surface/40 p-4">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="flex size-6 items-center justify-center rounded-full bg-brand-50 text-xs font-bold text-brand-800">{i + 1}</span>
+              <span className="text-xs font-semibold text-muted">{t("step")}</span>
+              <div className="ms-auto flex items-center gap-1">
+                <Button variant="ghost" size="icon-sm" onClick={() => move(i, -1)} disabled={disabled || i === 0} aria-label={t("moveUp")}><ArrowUp /></Button>
+                <Button variant="ghost" size="icon-sm" onClick={() => move(i, 1)} disabled={disabled || i === steps.length - 1} aria-label={t("moveDown")}><ArrowDown /></Button>
+                <Button variant="ghost" size="icon-sm" className="text-danger" onClick={() => emit(steps.filter((_, idx) => idx !== i))} disabled={disabled} aria-label={t("removeStep")}><X /></Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Input
+                value={s.title[lang] ?? ""}
+                onChange={(e) => patch(i, "title", e.target.value)}
+                dir={lang === "fa" ? "rtl" : "ltr"}
+                className={lang === "fa" ? "font-fa" : "font-en"}
+                placeholder={t("stepTitle")}
+                disabled={disabled}
+              />
+              <Textarea
+                value={s.body[lang] ?? ""}
+                onChange={(e) => patch(i, "body", e.target.value)}
+                dir={lang === "fa" ? "rtl" : "ltr"}
+                className={cn("min-h-24", lang === "fa" ? "font-fa" : "font-en")}
+                placeholder={t("stepBody")}
+                disabled={disabled}
+              />
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <Button variant="outline" size="sm" onClick={() => onChange([...steps, emptyStep()])} disabled={disabled}><Plus />{t("addStep")}</Button>
+    </div>
   );
 }
 
