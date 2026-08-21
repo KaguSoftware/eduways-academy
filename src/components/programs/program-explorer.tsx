@@ -157,7 +157,7 @@ export function ProgramExplorer({ programs, categories, universities }: { progra
 
   return (
     <section className="container-x py-10">
-      <div className="card mb-6 grid gap-4 p-5 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div className="card mb-6 grid gap-4 bg-surface/40 p-5 md:grid-cols-[1.4fr_1fr_1fr]">
         <ProgramSearch value={q} onChange={setQ} onPick={applySuggestion} suggestions={suggestions} placeholder={t("programs.placeholder")} count={t("common.results", { count: list.length })} className="md:col-span-3" />
         <Filter label={t("programs.university")}>
           <Select
@@ -226,9 +226,9 @@ export function ProgramExplorer({ programs, categories, universities }: { progra
         <Empty title={t("common.noResults")} />
       ) : (
         <>
-          <div className="overflow-hidden rounded-3xl border border-border">
+          <div className="overflow-hidden rounded-3xl border border-border bg-surface/40">
             <table className="w-full text-sm">
-              <thead className="bg-surface text-xs uppercase tracking-wide text-muted">
+              <thead className="bg-surface/60 text-xs uppercase tracking-wide text-muted">
                 <tr>
                   <th className="px-4 py-3 text-start font-semibold">{t("programs.title")}</th>
                   <th className="hidden px-4 py-3 text-start font-semibold md:table-cell">{t("programs.university")}</th>
