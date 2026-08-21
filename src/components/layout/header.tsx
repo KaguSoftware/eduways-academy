@@ -4,7 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import { Menu, Search, ChevronDown, Sparkles } from "lucide-react";
+import { Menu, Search, ChevronDown, Speech } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger, Popover, PopoverContent, PopoverTrigger } from "@/components/ui/primitives";
@@ -115,8 +115,8 @@ export function Header() {
           </Button>
           <LocaleSwitcher />
           <Button asChild size="md" className="hidden sm:inline-flex">
-            <Link href="/consultation">
-              <Sparkles className="size-4" />
+            <Link href="/consultation" className="rtl:flex-row-reverse">
+              <Speech className="size-4" />
               {t("consultation")}
             </Link>
           </Button>
