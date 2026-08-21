@@ -62,8 +62,11 @@ export function Header() {
     if (!menuOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    // Drives the page blur in globals.css ("Mobile menu: blur the page behind the panel").
+    document.body.dataset.menuOpen = "true";
     return () => {
       document.body.style.overflow = prev;
+      delete document.body.dataset.menuOpen;
     };
   }, [menuOpen]);
 
@@ -78,12 +81,12 @@ export function Header() {
 
   return (
     <header className={cn("sticky top-0 z-50 w-full transition-all duration-300", scrolled || menuOpen ? "glass border-b border-border/70 shadow-sm" : "bg-transparent")}>
-      <div className="container-x relative z-10 flex h-16 items-center justify-between gap-4 md:h-[4.5rem]">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5 focus-ring rounded-full" aria-label="Eduways Academy">
-          <Image src="/brand/logo.jpg" alt="Eduways Academy" width={40} height={40} className="size-10 rounded-full shadow-sm" priority />
+      <div className="container-x relative z-10 flex h-16 items-center justify-between gap-2 sm:gap-4 md:h-[4.5rem]">
+        <Link href="/" className="flex min-w-0 items-center gap-2.5 focus-ring rounded-full" aria-label="Eduways Academy">
+          <Image src="/brand/logo.jpg" alt="Eduways Academy" width={40} height={40} className="size-10 shrink-0 rounded-full shadow-sm" priority />
           <span className="flex min-w-0 flex-col leading-none">
             <span className="truncate text-[15px] font-extrabold tracking-tight text-brand-900">EDUWAYS</span>
-            <span className="hidden text-[10px] font-medium uppercase tracking-[0.18em] text-muted sm:block">Academy · Istanbul</span>
+            <span className="truncate text-[10px] font-medium uppercase tracking-[0.18em] text-muted">Academy · Istanbul</span>
           </span>
         </Link>
 
@@ -120,7 +123,7 @@ export function Header() {
           </Popover>
         </nav>
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1.5 md:gap-2">
           <button
             onClick={() => setSearchOpen(true)}
             className="hidden h-10 items-center gap-2 rounded-full border border-border bg-background/70 px-3.5 text-sm text-muted transition-colors hover:border-brand-300 hover:text-foreground focus-ring md:inline-flex"
@@ -179,7 +182,7 @@ function MobilePanel({ open, onNavigate, isActive }: { open: boolean; onNavigate
     <div
       id="mobile-menu"
       aria-hidden={!open}
-      className="fixed inset-x-0 bottom-0 top-16 z-40 bg-background md:top-[4.5rem] lg:hidden"
+      className="fixed inset-x-0 bottom-0 top-16 z-40 md:top-[4.5rem] lg:hidden"
       style={{
         /* Physical transform, not a `translate-x-*` utility: Tailwind flips those under
            `dir="rtl"`, which would slide the panel in from the left in Persian. */
@@ -190,10 +193,13 @@ function MobilePanel({ open, onNavigate, isActive }: { open: boolean; onNavigate
         transition: "transform 300ms ease-out, visibility 0s linear " + (open ? "0s" : "300ms"),
       }}
     >
+      {/* Opaque: the page behind is blurred by CSS instead (globals.css → "Mobile menu"),
+          so the panel does not need a backdrop-filter of its own. */}
+      <div aria-hidden className="absolute inset-0 -z-10 bg-background" />
       <div className="flex h-full flex-col">
         {/* Only the links scroll; the CTA below stays pinned to the bottom of the panel. */}
         <nav className="flex flex-1 flex-col overflow-y-auto overscroll-contain" aria-label="Mobile">
-          {[...NAV, ...MORE].map((n) => {
+          {[...NAV, ...MORE].map((n, i) => {
             const active = isActive(n.href);
             return (
               <Link
@@ -206,6 +212,15 @@ function MobilePanel({ open, onNavigate, isActive }: { open: boolean; onNavigate
                   "group flex items-center justify-between gap-4 border-b border-border/70 px-6 py-5 text-2xl font-bold tracking-tight transition-colors",
                   active ? "text-brand-700" : "text-foreground hover:text-brand-700",
                 )}
+                style={{
+                  /* Rows fly in one after another, trailing the panel's own slide. Physical
+                     translate (not a utility) so RTL keeps the same right-to-left motion. */
+                  opacity: open ? 1 : 0,
+                  transform: open ? "translateX(0)" : "translateX(2rem)",
+                  transition: open
+                    ? `opacity 220ms ease-out ${80 + i * 35}ms, transform 220ms cubic-bezier(0.22,1,0.36,1) ${80 + i * 35}ms`
+                    : "opacity 120ms ease-in, transform 120ms ease-in",
+                }}
               >
                 <span>{t(n.key)}</span>
                 {/* Points the way the reader travels: flipped in RTL. */}
