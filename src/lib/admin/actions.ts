@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getStaff } from "./auth";
-import { TABLES } from "./specs";
+import { TABLES, type TableSpec } from "./specs";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hasSupabase } from "@/lib/supabase/env";
 
@@ -20,6 +20,28 @@ function revalidateAll() {
   revalidatePath("/", "layout");
 }
 
+/**
+ * Rows ordered by an `order` column are positioned by an editor typing a number, so two rows
+ * routinely end up sharing one slot. Postgres then returns them in an arbitrary order (an updated
+ * row lands last in the heap), which reads as "changing the order did nothing". After every save
+ * the whole table is renumbered 1..n — the just-saved row wins its slot, everyone else keeps their
+ * relative position — so the number typed in is the position the row actually takes.
+ */
+async function resequence(admin: NonNullable<ReturnType<typeof createAdminClient>>, spec: TableSpec, saved: Record<string, unknown>) {
+  const savedId = String(saved[spec.idField]);
+  // `order` is a reserved word, hence the quoting; the response is typed too loosely for
+  // supabase-js's select parser, so it is read back as plain rows.
+  const { data, error } = await admin.from(spec.table).select(`${spec.idField},"order"`);
+  if (error || !data) return;
+  const rows = (data as unknown as Record<string, unknown>[]).map((r) => ({
+    id: String(r[spec.idField]),
+    order: typeof r.order === "number" ? r.order : Number.MAX_SAFE_INTEGER,
+  }));
+  rows.sort((a, b) => a.order - b.order || (a.id === savedId ? -1 : b.id === savedId ? 1 : 0));
+  const moved = rows.map((r, i) => ({ ...r, next: i + 1 })).filter((r) => r.next !== r.order);
+  await Promise.all(moved.map((r) => admin.from(spec.table).update({ order: r.next }).eq(spec.idField, r.id)));
+}
+
 export async function saveRecord(table: string, record: Record<string, unknown>): Promise<ActionResult> {
   const staff = await getStaff();
   if (!staff) return { ok: false, error: "unauthorized" };
@@ -32,6 +54,7 @@ export async function saveRecord(table: string, record: Record<string, unknown>)
   const clean = Object.fromEntries(Object.entries(record).filter(([k]) => allowed.has(k)));
   const { error } = await admin.from(spec.table).upsert(clean, { onConflict: spec.idField });
   if (error) return { ok: false, error: describe(error) };
+  if (spec.fields.some((f) => f.key === "order")) await resequence(admin, spec, clean);
   revalidateAll();
   return { ok: true };
 }

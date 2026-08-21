@@ -283,12 +283,20 @@ export async function FaqSection({ faqs, title }: { faqs: Faq[]; title?: string 
   return (
     <section className="container-x py-20">
       <SectionHeader title={title ?? t("home.faqTitle")} href="/faq" linkLabel={t("common.viewAll")} />
-      <Accordion type="single" collapsible className="grid gap-3 md:grid-cols-2">
-        {faqs.map((f) => (
-          <AccordionItem key={f.id} value={f.id}>
-            <AccordionTrigger>{tx(f.question, locale)}</AccordionTrigger>
-            <AccordionContent>{tx(f.answer, locale)}</AccordionContent>
-          </AccordionItem>
+      {/* Each column is its own grid, so an opened answer only pushes the cards below it in
+          that column — a row-based grid would stretch the untouched card beside it. On mobile
+          the wrappers are `display: contents`, which drops the split and lets the single root
+          column fall back to the real question order (carried by the `order` style). */}
+      <Accordion type="single" collapsible className="grid items-start gap-3 md:grid-cols-2">
+        {[0, 1].map((col) => (
+          <div key={col} className="contents md:grid md:content-start md:gap-3">
+            {faqs.map((f, i) => ({ f, i })).filter(({ i }) => i % 2 === col).map(({ f, i }) => (
+              <AccordionItem key={f.id} value={f.id} style={{ order: i }}>
+                <AccordionTrigger>{tx(f.question, locale)}</AccordionTrigger>
+                <AccordionContent>{tx(f.answer, locale)}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </div>
         ))}
       </Accordion>
     </section>
