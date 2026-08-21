@@ -4,7 +4,7 @@ import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
-import { SlidersHorizontal, X, ArrowDownAZ, ArrowDownNarrowWide, ArrowUpNarrowWide, Sparkles, Trophy, Layers } from "lucide-react";
+import { SlidersHorizontal, X, ArrowDownAZ, ArrowDownNarrowWide, ArrowUpNarrowWide, Sparkles, Trophy, Layers, MapPin } from "lucide-react";
 import type { UniversityWithRelations, District, Category } from "@/lib/types";
 import { cn, formatUSD, tx } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -216,10 +216,14 @@ export function UniversityExplorer({ universities, districts, categories }: { un
           value={f.district}
           onValueChange={(v) => set("district", v)}
           options={[
-            { value: "all", label: t("universities.allDistricts") },
+            { value: "all", label: <OptionRow icon={<MapPin className="size-4 text-brand-600" />} label={t("universities.allDistricts")} /> },
             ...districts.map((d) => {
               const n = countFor("district", (u) => u.district?.slug === d.slug);
-              return { value: d.slug, label: `${tx(d.name, locale)} · ${n}`, disabled: n === 0 };
+              return {
+                value: d.slug,
+                label: <OptionRow icon={<MapPin className="size-4 text-brand-600" />} label={`${tx(d.name, locale)} · ${n}`} />,
+                disabled: n === 0,
+              };
             }),
           ]}
         />
@@ -276,7 +280,7 @@ export function UniversityExplorer({ universities, districts, categories }: { un
         </div>
       </aside>
       <div>
-        <div className="sticky top-20 z-30 -mx-5 mb-6 glass px-5 py-3 md:top-[5.5rem] md:-mx-0 md:rounded-2xl md:border md:border-border">
+        <div className="sticky top-20 z-30 -mx-5 mb-6 bg-surface/60 px-5 py-3 md:top-[5.5rem] md:-mx-0 md:rounded-2xl md:border md:border-border">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <div className="flex-1">
               <SearchInput

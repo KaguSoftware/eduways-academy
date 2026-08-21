@@ -7,6 +7,7 @@ import * as React from "react";
 import {
   Accordion as RxAccordion,
   Checkbox as RxCheckbox,
+  Collapsible as RxCollapsible,
   Dialog as RxDialog,
   Popover as RxPopover,
   RadioGroup as RxRadio,
@@ -124,7 +125,7 @@ export function Select({ value, onValueChange, options, placeholder, className, 
         <RxSelect.Icon className="shrink-0 text-muted"><ChevronDown className="size-4" /></RxSelect.Icon>
       </RxSelect.Trigger>
       <RxSelect.Portal>
-        <RxSelect.Content position="popper" sideOffset={6} className="relative z-[100] max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-2xl border border-border bg-background shadow-lg animate-in fade-in zoom-in-95">
+        <RxSelect.Content position="popper" sideOffset={6} className="relative z-[100] max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-2xl border border-border bg-background shadow-lg data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 data-[state=closed]:duration-150">
           <RxSelect.Viewport ref={viewportRef} className="scrollbar-none max-h-[inherit] overflow-y-auto overscroll-contain p-1.5 pe-3">
             {options.map((o) => (
               <RxSelect.Item key={o.value} value={o.value} disabled={o.disabled} className="relative flex cursor-pointer select-none items-center rounded-xl py-2.5 pe-3 ps-9 text-sm outline-none data-[highlighted]:bg-brand-50 data-[highlighted]:text-brand-800 data-[state=checked]:font-semibold data-[disabled]:opacity-40">
@@ -432,15 +433,17 @@ export function FilterPill({ label, onRemove }: { label: React.ReactNode; onRemo
 export function FilterGroup({ title, action, children, defaultOpen = true }: { title: React.ReactNode; action?: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = React.useState(defaultOpen);
   return (
-    <div className="border-b border-border/70 pb-4 last:border-0 last:pb-0">
+    <RxCollapsible.Root open={open} onOpenChange={setOpen} className="border-b border-border/70 pb-4 last:border-0 last:pb-0">
       <div className="flex items-center justify-between gap-2">
-        <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="-mx-1 flex flex-1 items-center gap-1.5 rounded-lg px-1 py-1 text-start text-xs font-semibold uppercase tracking-wide text-muted transition-colors hover:text-foreground focus-ring">
-          <ChevronDown className={cn("size-3.5 transition-transform", !open && "-rotate-90 rtl:rotate-90")} />
+        <RxCollapsible.Trigger className="-mx-1 flex flex-1 items-center gap-1.5 rounded-lg px-1 py-1 text-start text-xs font-semibold uppercase tracking-wide text-muted transition-colors hover:text-foreground focus-ring">
+          <ChevronDown className={cn("size-3.5 transition-transform duration-200", !open && "-rotate-90 rtl:rotate-90")} />
           {title}
-        </button>
+        </RxCollapsible.Trigger>
         {action}
       </div>
-      {open && <div className="mt-2.5">{children}</div>}
-    </div>
+      <RxCollapsible.Content className="overflow-hidden data-[state=closed]:animate-[collapsible-up_0.22s_ease-out] data-[state=open]:animate-[collapsible-down_0.22s_ease-out] motion-reduce:animate-none">
+        <div className="mt-2.5">{children}</div>
+      </RxCollapsible.Content>
+    </RxCollapsible.Root>
   );
 }

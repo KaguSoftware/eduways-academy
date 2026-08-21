@@ -24,7 +24,7 @@ export default async function UniversitiesPage({ params }: { params: Promise<{ l
 
   return (
     <>
-      <PageHeader eyebrow={`${universities.length} · Istanbul`} title={t("title")} subtitle={t("subtitle")} />
+      <PageHeader title={t("title")} subtitle={t("subtitle")} />
       <Suspense fallback={<div className="container-x grid gap-5 py-10 md:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-64" />)}</div>}>
         <UniversityExplorer universities={universities.map(slimUniversity)} districts={districts} categories={categories} />
       </Suspense>
