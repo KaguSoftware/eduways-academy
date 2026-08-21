@@ -467,6 +467,11 @@
     "overview": "Overview",
     "recentLeads": "Recent leads",
     "quickLinks": "Quick links",
-    "colTitle": "Title"
+    "colTitle": "Title",
+    "deleteCascade": "Everything attached to this university — its programs, scholarships, rankings and admission documents — is deleted with it.",
+    "deleteConfirmLabel": "Type the id to confirm",
+    "deleteConfirmHint": "Type {id} exactly.",
+    "deleting": "Deleting…",
+    "cancel": "Cancel"
   }
 }
