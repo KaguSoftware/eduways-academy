@@ -102,8 +102,9 @@ export const supabaseRepo: Repo = {
   },
   async listStories() {
     const sb = publicClient();
-    const { data } = await sb.from("stories").select("*, university:universities(*)").order("published_at", { ascending: false });
-    return (data ?? []) as never;
+    // Ordered by id like posts, so the list reads story-1, story-2, … regardless of publish dates.
+    const { data } = await sb.from("stories").select("*, university:universities(*)");
+    return (data ?? []).sort(byId) as never;
   },
   async getStory(slug) {
     const sb = publicClient();

@@ -68,7 +68,7 @@ export const seedRepo: Repo = {
   async listRequirements(universityId) { return requirements.filter((r) => r.university_id === universityId); },
   async listServices() { return [...services].sort((a, b) => a.order - b.order); },
   async getService(slug) { return services.find((s) => s.slug === slug) ?? null; },
-  async listStories() { return stories.map((s) => ({ ...s, university: universities.find((u) => u.id === s.university_id) })); },
+  async listStories() { return [...stories].sort(byId).map((s) => ({ ...s, university: universities.find((u) => u.id === s.university_id) })); },
   async getStory(slug) {
     const s = stories.find((x) => x.slug === slug);
     return s ? { ...s, university: universities.find((u) => u.id === s.university_id) } : null;
