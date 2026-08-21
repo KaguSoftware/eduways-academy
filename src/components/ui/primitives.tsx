@@ -310,13 +310,14 @@ export const DialogClose = RxDialog.Close;
 export function DialogContent({ className, children, heading, description, side, ...props }: React.ComponentProps<typeof RxDialog.Content> & { heading: React.ReactNode; description?: React.ReactNode; side?: "center" | "end" | "bottom" }) {
   return (
     <RxDialog.Portal>
-      <RxDialog.Overlay className="fixed inset-0 z-[90] bg-brand-950/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in" />
+      <RxDialog.Overlay className="fixed inset-0 z-[90] bg-brand-950/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out" />
       <RxDialog.Content
         className={cn(
           "fixed z-[95] bg-background shadow-lg focus:outline-none",
-          side === "end" && "inset-y-0 end-0 h-full w-full max-w-sm overflow-y-auto p-6 data-[state=open]:animate-in data-[state=open]:slide-in-from-end",
-          side === "bottom" && "inset-x-0 bottom-0 max-h-[90dvh] overflow-y-auto rounded-t-3xl p-6",
-          (!side || side === "center") && "start-1/2 top-1/2 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-3xl p-6 rtl:translate-x-1/2",
+          "data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:duration-200 data-[state=open]:duration-300 data-[state=open]:ease-out",
+          side === "end" && "inset-y-0 end-0 h-full w-full max-w-sm overflow-y-auto p-6 data-[state=open]:slide-in-from-end data-[state=closed]:slide-out-to-end",
+          side === "bottom" && "inset-x-0 bottom-0 max-h-[90dvh] overflow-y-auto rounded-t-3xl p-6 data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
+          (!side || side === "center") && "start-1/2 top-1/2 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-3xl p-6 rtl:translate-x-1/2 data-[state=open]:fade-in data-[state=open]:zoom-in-95 data-[state=closed]:fade-out data-[state=closed]:zoom-out-95",
           className,
         )}
         {...props}
