@@ -43,23 +43,23 @@ export async function RankingTable({ list, metricKey }: { list: UniversityWithRe
     return u.best_rank ? `#${formatNumber(u.best_rank, locale)}` : "—";
   };
   return (
-    <div className="overflow-x-auto rounded-3xl border border-border">
-      <table className="w-full min-w-[720px] text-sm">
-        <thead className="bg-surface text-xs uppercase tracking-wide text-muted">
+    <div className="glass overflow-x-auto rounded-3xl border border-border/70 shadow-sm">
+      <table className="w-full text-sm md:min-w-[720px]">
+        <thead className="bg-surface/60 text-xs uppercase tracking-wide text-muted">
           <tr>
             <th className="w-14 px-4 py-3 text-center font-semibold">#</th>
             <th className="px-4 py-3 text-start font-semibold">{t("rankings.colUniversity")}</th>
             <th className="px-4 py-3 text-center font-semibold">{metricKey === "best-value" ? t("rankings.colValue") : metricKey === "cheapest" ? t("rankings.colTuition") : metricKey === "english-taught" ? t("rankings.colPrograms") : t("rankings.colRank")}</th>
-            <th className="px-4 py-3 text-center font-semibold">{t("rankings.colType")}</th>
-            <th className="px-4 py-3 text-center font-semibold">{t("rankings.colTuition")}</th>
-            <th className="px-4 py-3 text-center font-semibold">{t("rankings.colScore")}</th>
-            <th className="px-4 py-3 text-center font-semibold">{t("rankings.colValue")}</th>
+            <th className="hidden px-4 py-3 text-center font-semibold md:table-cell">{t("rankings.colType")}</th>
+            <th className="hidden px-4 py-3 text-center font-semibold md:table-cell">{t("rankings.colTuition")}</th>
+            <th className="hidden px-4 py-3 text-center font-semibold md:table-cell">{t("rankings.colScore")}</th>
+            <th className="hidden px-4 py-3 text-center font-semibold md:table-cell">{t("rankings.colValue")}</th>
           </tr>
         </thead>
         <tbody>
           {list.map((u, i) => (
-            <tr key={u.id} className="group border-t border-border transition-colors hover:bg-brand-50/40">
-              <td className="px-4 py-3"><span className={cn("mx-auto flex size-8 items-center justify-center rounded-full font-en text-sm font-extrabold", i < 3 ? "bg-brand-gradient text-white" : "bg-surface text-muted")}>{formatNumber(i + 1, locale)}</span></td>
+            <tr key={u.id} className="group border-t border-border/60 transition-colors hover:bg-brand-50/40">
+              <td className="px-4 py-3"><span className={cn("mx-auto flex size-8 items-center justify-center rounded-full font-en text-sm font-extrabold", i < 3 ? "bg-brand-gradient text-white" : "bg-surface/70 text-muted")}>{formatNumber(i + 1, locale)}</span></td>
               <td className="px-4 py-3">
                 <Link href={`/universities/${u.slug}`} className="flex items-center gap-3">
                   <UniversityLogo name={u.short_name || u.name.en} logo={u.logo_url} size={36} className="rounded-xl text-xs" />
@@ -67,10 +67,10 @@ export async function RankingTable({ list, metricKey }: { list: UniversityWithRe
                 </Link>
               </td>
               <td className="px-4 py-3 text-center font-extrabold tabular text-brand-800">{metric(u)}</td>
-              <td className="px-4 py-3 text-center"><Badge variant={u.type === "public" ? "success" : "accent"}>{t(`common.${u.type}`)}</Badge></td>
-              <td className="px-4 py-3 text-center tabular">{formatRange(u.avg_tuition_min, u.avg_tuition_max, locale)}</td>
-              <td className="px-4 py-3"><div className="flex justify-center"><ScoreRing value={u.editorial_score} size={36} /></div></td>
-              <td className="px-4 py-3"><div className="flex justify-center"><ScoreRing value={u.value_score ?? 0} size={36} /></div></td>
+              <td className="hidden px-4 py-3 text-center md:table-cell"><Badge variant={u.type === "public" ? "success" : "accent"}>{t(`common.${u.type}`)}</Badge></td>
+              <td className="hidden px-4 py-3 text-center tabular md:table-cell">{formatRange(u.avg_tuition_min, u.avg_tuition_max, locale)}</td>
+              <td className="hidden px-4 py-3 md:table-cell"><div className="flex justify-center"><ScoreRing value={u.editorial_score} size={36} /></div></td>
+              <td className="hidden px-4 py-3 md:table-cell"><div className="flex justify-center"><ScoreRing value={u.value_score ?? 0} size={36} /></div></td>
             </tr>
           ))}
         </tbody>
