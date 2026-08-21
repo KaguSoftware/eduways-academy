@@ -124,7 +124,7 @@ export function Select({ value, onValueChange, options, placeholder, className, 
         <RxSelect.Icon className="shrink-0 text-muted"><ChevronDown className="size-4" /></RxSelect.Icon>
       </RxSelect.Trigger>
       <RxSelect.Portal>
-        <RxSelect.Content position="popper" sideOffset={6} className="relative z-[100] max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-2xl border border-border bg-background shadow-lg animate-in fade-in zoom-in-95">
+        <RxSelect.Content position="popper" sideOffset={6} className="relative z-[100] max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-2xl border border-border bg-background shadow-lg data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95">
           <RxSelect.Viewport ref={viewportRef} className="scrollbar-none max-h-[inherit] overflow-y-auto overscroll-contain p-1.5 pe-3">
             {options.map((o) => (
               <RxSelect.Item key={o.value} value={o.value} disabled={o.disabled} className="relative flex cursor-pointer select-none items-center rounded-xl py-2.5 pe-3 ps-9 text-sm outline-none data-[highlighted]:bg-brand-50 data-[highlighted]:text-brand-800 data-[state=checked]:font-semibold data-[disabled]:opacity-40">
@@ -360,7 +360,7 @@ export function Badge({ className, variant = "default", ...props }: React.HTMLAt
     default: "bg-surface-2 text-foreground",
     brand: "bg-brand-50 text-brand-800",
     accent: "bg-accent-500/15 text-accent-600",
-    success: "bg-success/10 text-success",
+    success: "bg-success/12 text-success",
     warning: "bg-warning/15 text-warning",
     outline: "border border-border text-muted",
     dark: "bg-brand-900 text-white",

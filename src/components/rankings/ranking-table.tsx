@@ -67,7 +67,7 @@ export async function RankingTable({ list, metricKey }: { list: UniversityWithRe
                 </Link>
               </td>
               <td className="px-4 py-3 text-center font-extrabold tabular text-brand-800">{metric(u)}</td>
-              <td className="px-4 py-3 text-center"><Badge variant={u.type === "public" ? "brand" : "accent"}>{t(`common.${u.type}`)}</Badge></td>
+              <td className="px-4 py-3 text-center"><Badge variant={u.type === "public" ? "success" : "accent"}>{t(`common.${u.type}`)}</Badge></td>
               <td className="px-4 py-3 text-center tabular">{formatRange(u.avg_tuition_min, u.avg_tuition_max, locale)}</td>
               <td className="px-4 py-3"><div className="flex justify-center"><ScoreRing value={u.editorial_score} size={36} /></div></td>
               <td className="px-4 py-3"><div className="flex justify-center"><ScoreRing value={u.value_score ?? 0} size={36} /></div></td>
