@@ -8,6 +8,13 @@ import { hasSupabase } from "@/lib/supabase/env";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
+/** Turn raw Postgres errors into something an editor can act on. */
+function describe(error: { code?: string; message: string; details?: string | null }): string {
+  if (error.code === "23503") return `${error.message} — the referenced record does not exist; pick an existing one from the dropdown.`;
+  if (error.code === "23505") return `${error.message} — a record with this id or slug already exists.`;
+  return error.message;
+}
+
 function revalidateAll() {
   // Content changes affect many pages; revalidate both locale roots.
   revalidatePath("/", "layout");
@@ -24,7 +31,7 @@ export async function saveRecord(table: string, record: Record<string, unknown>)
   const allowed = new Set(spec.fields.map((f) => f.key));
   const clean = Object.fromEntries(Object.entries(record).filter(([k]) => allowed.has(k)));
   const { error } = await admin.from(spec.table).upsert(clean, { onConflict: spec.idField });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: describe(error) };
   revalidateAll();
   return { ok: true };
 }

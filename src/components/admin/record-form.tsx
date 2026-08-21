@@ -4,7 +4,7 @@ import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Loader2, Save, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
-import type { FieldSpec, TableSpec } from "@/lib/admin/specs";
+import type { FieldSpec, RefOption, TableSpec } from "@/lib/admin/specs";
 import { SECTION_LABELS } from "@/lib/admin/specs";
 import { saveRecord, deleteRecord } from "@/lib/admin/actions";
 import { cn, tx, toEnglishDigits, slugify } from "@/lib/utils";
@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 type Row = Record<string, unknown>;
 const SECTIONS = ["basic", "content", "numbers", "meta"] as const;
 
-export function RecordForm({ table, spec, initial, isNew, canDelete, readOnly }: { table: string; spec: TableSpec; initial: Row; isNew: boolean; canDelete: boolean; readOnly: boolean }) {
+export function RecordForm({ table, spec, initial, refOptions, isNew, canDelete, readOnly }: { table: string; spec: TableSpec; initial: Row; refOptions?: Record<string, RefOption[]>; isNew: boolean; canDelete: boolean; readOnly: boolean }) {
   const t = useTranslations("admin");
   const locale = useLocale();
   const router = useRouter();
@@ -81,7 +81,7 @@ export function RecordForm({ table, spec, initial, isNew, canDelete, readOnly }:
             <div className="grid gap-5 md:grid-cols-2">
               {fields.map((f) => (
                 <div key={f.key} className={cn(["i18n-long", "i18n-md", "i18n-list", "json"].includes(f.type) && "md:col-span-2")}>
-                  <FieldControl f={f} value={row[f.key]} onChange={(v) => set(f.key, v)} disabled={readOnly || (f.readOnly && !isNew) || (f.key === spec.idField && !isNew)} locale={locale} />
+                  <FieldControl f={f} value={row[f.key]} refOptions={refOptions?.[f.key]} onChange={(v) => set(f.key, v)} disabled={readOnly || (f.readOnly && !isNew) || (f.key === spec.idField && !isNew)} locale={locale} />
                 </div>
               ))}
             </div>
@@ -202,7 +202,7 @@ function I18nListInput({ value, onChange, disabled }: { value: unknown; onChange
   );
 }
 
-function FieldControl({ f, value, onChange, disabled, locale }: { f: FieldSpec; value: unknown; onChange: (v: unknown) => void; disabled?: boolean; locale: string }) {
+function FieldControl({ f, value, refOptions, onChange, disabled, locale }: { f: FieldSpec; value: unknown; refOptions?: RefOption[]; onChange: (v: unknown) => void; disabled?: boolean; locale: string }) {
   const t = useTranslations("admin");
   const label = <span>{tx(f.label, locale)}{f.required && <span className="ms-1 text-danger">*</span>}</span>;
   const hint = f.help ? tx(f.help, locale) : f.key === "id" ? t("idHint") : undefined;
@@ -222,10 +222,12 @@ function FieldControl({ f, value, onChange, disabled, locale }: { f: FieldSpec; 
       );
     case "select":
       return <Field label={label} hint={hint}><Select value={(value as string) ?? undefined} onValueChange={onChange} options={(f.options ?? []).map((o) => ({ value: o.value, label: tx(o.label, locale) }))} disabled={disabled} placeholder="—" /></Field>;
+    case "ref":
+      return <Field label={label} hint={hint}><RefSelect value={value} onChange={onChange} options={refOptions ?? []} required={f.required} disabled={disabled} placeholder="—" /></Field>;
     case "date":
       return <Field label={label} hint={hint}><DatePicker value={(value as string) ?? null} onChange={onChange} /></Field>;
     case "tags":
-      return <Field label={label} hint={hint}><Input value={Array.isArray(value) ? (value as string[]).join(", ") : ""} onChange={(e) => onChange(e.target.value.split(/[,،]/).map((s) => s.trim()).filter(Boolean))} disabled={disabled} dir="ltr" className="font-en" /></Field>;
+      return <Field label={label} hint={hint}><TagsInput value={value} onChange={onChange} disabled={disabled} wordsOnly={f.wordsOnly} /></Field>;
     case "i18n":
       return <Field label={label} hint={hint}><I18nInput value={value} onChange={onChange} disabled={disabled} /></Field>;
     case "i18n-long":
@@ -237,6 +239,57 @@ function FieldControl({ f, value, onChange, disabled, locale }: { f: FieldSpec; 
     case "json":
       return <JsonField label={label} value={value} onChange={onChange} disabled={disabled} help={hint} />;
   }
+}
+
+/** Foreign-key picker: only ids that actually exist, so a save can't break an FK constraint. */
+const REF_NONE = "__none__";
+function RefSelect({ value, onChange, options, required, disabled, placeholder }: { value: unknown; onChange: (v: unknown) => void; options: RefOption[]; required?: boolean; disabled?: boolean; placeholder?: string }) {
+  const current = typeof value === "string" && value ? value : null;
+  // Keep an unknown legacy id selectable so opening an old row never silently drops it.
+  const all = current && !options.some((o) => o.value === current) ? [{ value: current, label: current }, ...options] : options;
+  const items = required ? all : [{ value: REF_NONE, label: "—" }, ...all];
+  return (
+    <Select
+      value={current ?? (required ? undefined : REF_NONE)}
+      onValueChange={(v) => onChange(v === REF_NONE ? null : v)}
+      options={items}
+      disabled={disabled}
+      placeholder={placeholder}
+    />
+  );
+}
+
+// wordsOnly fields accept letters, digits and spaces; "," is the one punctuation that gets through.
+const NOT_A_WORD_CHAR = /[^\p{L}\p{N},\s]/gu;
+
+/**
+ * Comma-separated list. Keeps the raw text while typing (so the comma the user just typed
+ * survives re-render) and treats *only* "," as the separator. With `wordsOnly`, every other
+ * symbol (".", "-", "/", "،"…) is dropped as it is typed or pasted.
+ */
+function TagsInput({ value, onChange, disabled, wordsOnly }: { value: unknown; onChange: (v: string[] | null) => void; disabled?: boolean; wordsOnly?: boolean }) {
+  const asText = (v: unknown) => (Array.isArray(v) ? (v as string[]).join(", ") : typeof v === "string" ? v : "");
+  const [text, setText] = React.useState(() => asText(value));
+  const emitted = React.useRef(asText(value));
+  React.useEffect(() => {
+    const next = asText(value);
+    if (next !== emitted.current) { setText(next); emitted.current = next; }
+  }, [value]);
+  return (
+    <Input
+      value={text}
+      dir="ltr"
+      className="font-en"
+      disabled={disabled}
+      onChange={(e) => {
+        const raw = wordsOnly ? e.target.value.replace(NOT_A_WORD_CHAR, "") : e.target.value;
+        setText(raw);
+        const items = raw.split(",").map((s) => s.trim()).filter(Boolean);
+        emitted.current = items.join(", ");
+        onChange(items.length ? items : null);
+      }}
+    />
+  );
 }
 
 function JsonField({ label, value, onChange, disabled, help }: { label: React.ReactNode; value: unknown; onChange: (v: unknown) => void; disabled?: boolean; help?: string }) {
