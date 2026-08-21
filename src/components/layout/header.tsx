@@ -124,6 +124,7 @@ export function Header() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-1.5 md:gap-2">
+          <LocaleSwitcher />
           <button
             onClick={() => setSearchOpen(true)}
             className="hidden h-10 items-center gap-2 rounded-full border border-border bg-background/70 px-3.5 text-sm text-muted transition-colors hover:border-brand-300 hover:text-foreground focus-ring md:inline-flex"
@@ -136,7 +137,6 @@ export function Header() {
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSearchOpen(true)} aria-label={t("search")}>
             <Search />
           </Button>
-          <LocaleSwitcher />
           <Button asChild size="md" className="hidden sm:inline-flex">
             <Link href="/consultation" className="rtl:flex-row-reverse">
               <Speech className="size-4" />
