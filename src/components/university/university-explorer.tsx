@@ -306,7 +306,7 @@ export function UniversityExplorer({ universities, districts, categories }: { un
               ]} />
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 flex-1 rounded-lg md:h-11 md:flex-none lg:hidden"><SlidersHorizontal className="size-4" />{t("common.filters")}{activeCount > 0 && <Badge variant="brand">{activeCount}</Badge>}</Button>
+                  <Button variant="outline" size="sm" className="h-10 flex-1 rounded-lg md:h-11 md:flex-none lg:hidden"><SlidersHorizontal className="size-4 text-brand-600" />{t("common.filters")}{activeCount > 0 && <Badge variant="brand">{activeCount}</Badge>}</Button>
                 </DialogTrigger>
                 <DialogContent side="bottom" heading={t("common.filters")}>
                   <div className="rounded-2xl border border-border bg-background px-3 py-3.5">{Panel}</div>
