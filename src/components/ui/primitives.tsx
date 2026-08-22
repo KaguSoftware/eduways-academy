@@ -7,6 +7,7 @@ import * as React from "react";
 import {
   Accordion as RxAccordion,
   Checkbox as RxCheckbox,
+  Collapsible as RxCollapsible,
   Dialog as RxDialog,
   Popover as RxPopover,
   RadioGroup as RxRadio,
@@ -124,7 +125,7 @@ export function Select({ value, onValueChange, options, placeholder, className, 
         <RxSelect.Icon className="shrink-0 text-muted"><ChevronDown className="size-4" /></RxSelect.Icon>
       </RxSelect.Trigger>
       <RxSelect.Portal>
-        <RxSelect.Content position="popper" sideOffset={6} className="relative z-[100] max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-2xl border border-border bg-background shadow-lg animate-in fade-in zoom-in-95">
+        <RxSelect.Content position="popper" sideOffset={6} className="relative z-[100] max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-2xl border border-border bg-background shadow-lg data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 data-[state=closed]:duration-150">
           <RxSelect.Viewport ref={viewportRef} className="scrollbar-none max-h-[inherit] overflow-y-auto overscroll-contain p-1.5 pe-3">
             {options.map((o) => (
               <RxSelect.Item key={o.value} value={o.value} disabled={o.disabled} className="relative flex cursor-pointer select-none items-center rounded-xl py-2.5 pe-3 ps-9 text-sm outline-none data-[highlighted]:bg-brand-50 data-[highlighted]:text-brand-800 data-[state=checked]:font-semibold data-[disabled]:opacity-40">
@@ -174,20 +175,47 @@ export function RadioItem({ className, label, description, ...props }: React.Com
 }
 
 /** Segmented control: branded alternative to radio buttons for 2–4 options. */
-export function Segmented<T extends string>({ value, onChange, options, className, size = "md", ariaLabel }: { value: T; onChange: (v: T) => void; options: { value: T; label: React.ReactNode }[]; className?: string; size?: "sm" | "md"; ariaLabel?: string }) {
+export function Segmented<T extends string>({ value, onChange, options, className, size = "md", ariaLabel, animated = false }: { value: T; onChange: (v: T) => void; options: { value: T; label: React.ReactNode }[]; className?: string; size?: "sm" | "md"; ariaLabel?: string; animated?: boolean }) {
+  const listRef = React.useRef<HTMLDivElement>(null);
+  const [thumb, setThumb] = React.useState<{ left: number; width: number } | null>(null);
+
+  // Measure the active button so one shared pill can slide between options.
+  React.useLayoutEffect(() => {
+    if (!animated) return;
+    const list = listRef.current;
+    if (!list) return;
+    const measure = () => {
+      const active = list.querySelector<HTMLButtonElement>('[data-active="true"]');
+      if (active) setThumb({ left: active.offsetLeft, width: active.offsetWidth });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(list);
+    return () => ro.disconnect();
+  }, [animated, value, options]);
+
   return (
-    <div role="radiogroup" aria-label={ariaLabel} className={cn("inline-flex rounded-full border border-border bg-surface p-1", className)}>
+    <div ref={listRef} role="radiogroup" aria-label={ariaLabel} className={cn("relative inline-flex rounded-full border border-border bg-surface p-1", className)}>
+      {animated && thumb && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-1 left-0 rounded-full bg-background shadow-sm transition-[transform,width] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
+          style={{ width: thumb.width, transform: `translateX(${thumb.left}px)` }}
+        />
+      )}
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
           role="radio"
           aria-checked={value === o.value}
+          data-active={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "rounded-full font-medium transition-all focus-ring",
+            "relative z-10 rounded-full font-medium focus-ring",
+            animated ? "transition-colors duration-200" : "transition-all",
             size === "sm" ? "px-3 py-1 text-xs" : "px-4 py-1.5 text-sm",
-            value === o.value ? "bg-background text-brand-800 shadow-sm" : "text-muted hover:text-foreground",
+            value === o.value ? (animated ? "text-brand-800" : "bg-background text-brand-800 shadow-sm") : "text-muted hover:text-foreground",
           )}
         >
           {o.label}
@@ -282,13 +310,14 @@ export const DialogClose = RxDialog.Close;
 export function DialogContent({ className, children, heading, description, side, ...props }: React.ComponentProps<typeof RxDialog.Content> & { heading: React.ReactNode; description?: React.ReactNode; side?: "center" | "end" | "bottom" }) {
   return (
     <RxDialog.Portal>
-      <RxDialog.Overlay className="fixed inset-0 z-[90] bg-brand-950/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in" />
+      <RxDialog.Overlay className="fixed inset-0 z-[90] bg-brand-950/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out" />
       <RxDialog.Content
         className={cn(
           "fixed z-[95] bg-background shadow-lg focus:outline-none",
-          side === "end" && "inset-y-0 end-0 h-full w-full max-w-sm overflow-y-auto p-6 data-[state=open]:animate-in data-[state=open]:slide-in-from-end",
-          side === "bottom" && "inset-x-0 bottom-0 max-h-[90dvh] overflow-y-auto rounded-t-3xl p-6",
-          (!side || side === "center") && "start-1/2 top-1/2 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-3xl p-6 rtl:translate-x-1/2",
+          "data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:duration-200 data-[state=open]:duration-300 data-[state=open]:ease-out",
+          side === "end" && "inset-y-0 end-0 h-full w-full max-w-sm overflow-y-auto p-6 data-[state=open]:slide-in-from-end data-[state=closed]:slide-out-to-end",
+          side === "bottom" && "inset-x-0 bottom-0 max-h-[90dvh] overflow-y-auto rounded-t-3xl p-6 data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
+          (!side || side === "center") && "start-1/2 top-1/2 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-3xl p-6 rtl:translate-x-1/2 data-[state=open]:fade-in data-[state=open]:zoom-in-95 data-[state=closed]:fade-out data-[state=closed]:zoom-out-95",
           className,
         )}
         {...props}
@@ -372,7 +401,7 @@ export function Skeleton({ className }: { className?: string }) {
   return <div className={cn("animate-pulse rounded-xl bg-surface-2", className)} />;
 }
 
-export function SearchInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+export function SearchInput(props: React.InputHTMLAttributes<HTMLInputElement> & { endIcon?: React.ReactNode }) {
   return <Input startIcon={<Search />} type="search" {...props} />;
 }
 
@@ -405,15 +434,17 @@ export function FilterPill({ label, onRemove }: { label: React.ReactNode; onRemo
 export function FilterGroup({ title, action, children, defaultOpen = true }: { title: React.ReactNode; action?: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = React.useState(defaultOpen);
   return (
-    <div className="border-b border-border/70 pb-4 last:border-0 last:pb-0">
+    <RxCollapsible.Root open={open} onOpenChange={setOpen} className="border-b border-border/70 pb-4 last:border-0 last:pb-0">
       <div className="flex items-center justify-between gap-2">
-        <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="-mx-1 flex flex-1 items-center gap-1.5 rounded-lg px-1 py-1 text-start text-xs font-semibold uppercase tracking-wide text-muted transition-colors hover:text-foreground focus-ring">
-          <ChevronDown className={cn("size-3.5 transition-transform", !open && "-rotate-90 rtl:rotate-90")} />
+        <RxCollapsible.Trigger className="-mx-1 flex flex-1 items-center gap-1.5 rounded-lg px-1 py-1 text-start text-xs font-semibold uppercase tracking-wide text-muted transition-colors hover:text-foreground focus-ring">
+          <ChevronDown className={cn("size-3.5 transition-transform duration-200", !open && "-rotate-90 rtl:rotate-90")} />
           {title}
-        </button>
+        </RxCollapsible.Trigger>
         {action}
       </div>
-      {open && <div className="mt-2.5">{children}</div>}
-    </div>
+      <RxCollapsible.Content className="overflow-hidden data-[state=closed]:animate-[collapsible-up_0.22s_ease-out] data-[state=open]:animate-[collapsible-down_0.22s_ease-out] motion-reduce:animate-none">
+        <div className="mt-2.5">{children}</div>
+      </RxCollapsible.Content>
+    </RxCollapsible.Root>
   );
 }

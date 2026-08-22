@@ -4,16 +4,27 @@ import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X, ArrowDownAZ, ArrowDownNarrowWide, ArrowUpNarrowWide, Sparkles, Trophy, Layers, MapPin } from "lucide-react";
 import type { UniversityWithRelations, District, Category } from "@/lib/types";
 import { cn, formatUSD, tx } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Select, Segmented, Slider, SearchInput, Badge, Empty, Dialog, DialogContent, DialogTrigger, DialogClose, Checkbox, FilterGroup, FilterPill } from "@/components/ui/primitives";
 import { UniversityCard } from "./university-card";
+import { DynamicIcon } from "@/components/home/sections";
 
 type Sort = "score" | "tuitionAsc" | "tuitionDesc" | "rank" | "name";
 type Type = "all" | "public" | "foundation";
 type Side = "all" | "european" | "asian";
+
+/** Select option row: leading icon + label, matching the programs sort menu. */
+function OptionRow({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      <span className="flex size-5 shrink-0 items-center justify-center">{icon}</span>
+      <span className="truncate">{label}</span>
+    </span>
+  );
+}
 
 const TUITION_MIN = 1000;
 const TUITION_MAX = 35000;
@@ -135,6 +146,7 @@ export function UniversityExplorer({ universities, districts, categories }: { un
     <div className="flex flex-col gap-4">
       <FilterGroup title={t("universities.filterType")}>
         <Segmented
+          animated
           value={f.type}
           onChange={(v) => set("type", v)}
           className="w-full [&>button]:flex-1"
@@ -149,6 +161,7 @@ export function UniversityExplorer({ universities, districts, categories }: { un
 
       <FilterGroup title={t("universities.filterSide")}>
         <Segmented
+          animated
           value={f.side}
           onChange={(v) => set("side", v)}
           className="w-full [&>button]:flex-1"
@@ -163,6 +176,7 @@ export function UniversityExplorer({ universities, districts, categories }: { un
 
       <FilterGroup title={t("universities.filterLanguage")}>
         <Segmented
+          animated
           value={f.lang}
           onChange={(v) => set("lang", v)}
           className="w-full [&>button]:flex-1"
@@ -175,22 +189,6 @@ export function UniversityExplorer({ universities, districts, categories }: { un
         />
       </FilterGroup>
 
-      <FilterGroup title={t("universities.filterDistrict")}>
-        <Select
-          size="sm"
-          ariaLabel={t("universities.filterDistrict")}
-          value={f.district}
-          onValueChange={(v) => set("district", v)}
-          options={[
-            { value: "all", label: t("universities.allDistricts") },
-            ...districts.map((d) => {
-              const n = countFor("district", (u) => u.district?.slug === d.slug);
-              return { value: d.slug, label: `${tx(d.name, locale)} · ${n}`, disabled: n === 0 };
-            }),
-          ]}
-        />
-      </FilterGroup>
-
       <FilterGroup title={t("programs.field")}>
         <Select
           size="sm"
@@ -198,10 +196,34 @@ export function UniversityExplorer({ universities, districts, categories }: { un
           value={f.category}
           onValueChange={(v) => set("category", v)}
           options={[
-            { value: "all", label: t("universities.allFields") },
+            { value: "all", label: <OptionRow icon={<Layers className="size-4 text-brand-600" />} label={t("universities.allFields")} /> },
             ...categories.map((c) => {
               const n = countFor("category", (u) => u.programs.some((p) => p.category_id === c.id));
-              return { value: c.id, label: `${tx(c.name, locale)} · ${n}`, disabled: n === 0 };
+              return {
+                value: c.id,
+                label: <OptionRow icon={<DynamicIcon name={c.icon ?? "Sparkles"} className="size-4 text-brand-600" />} label={`${tx(c.name, locale)} · ${n}`} />,
+                disabled: n === 0,
+              };
+            }),
+          ]}
+        />
+      </FilterGroup>
+
+      <FilterGroup title={t("universities.filterDistrict")}>
+        <Select
+          size="sm"
+          ariaLabel={t("universities.filterDistrict")}
+          value={f.district}
+          onValueChange={(v) => set("district", v)}
+          options={[
+            { value: "all", label: <OptionRow icon={<MapPin className="size-4 text-brand-600" />} label={t("universities.allDistricts")} /> },
+            ...districts.map((d) => {
+              const n = countFor("district", (u) => u.district?.slug === d.slug);
+              return {
+                value: d.slug,
+                label: <OptionRow icon={<MapPin className="size-4 text-brand-600" />} label={`${tx(d.name, locale)} · ${n}`} />,
+                disabled: n === 0,
+              };
             }),
           ]}
         />
@@ -258,28 +280,54 @@ export function UniversityExplorer({ universities, districts, categories }: { un
         </div>
       </aside>
       <div>
-        <div className="sticky top-16 z-30 -mx-5 mb-6 glass px-5 py-3 md:top-[4.5rem] md:-mx-0 md:rounded-2xl md:border md:border-border">
+        <div className="sticky top-20 z-30 -mx-2 mb-6 rounded-xl border border-border bg-surface/60 px-3 py-2.5 md:top-[5.5rem] md:-mx-0 md:rounded-2xl md:px-5 md:py-3">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <div className="flex-1"><SearchInput value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("home.searchPlaceholder")} /></div>
-            <div className="flex items-center gap-2">
-              <Select size="sm" ariaLabel={t("common.sortBy")} value={sort} onValueChange={(v) => setSort(v as Sort)} className="w-44" options={[
-                { value: "score", label: t("universities.sortScore") },
-                { value: "rank", label: t("universities.sortRank") },
-                { value: "tuitionAsc", label: t("universities.sortTuitionAsc") },
-                { value: "tuitionDesc", label: t("universities.sortTuitionDesc") },
-                { value: "name", label: t("universities.sortName") },
+            <div className="flex-1">
+              <SearchInput
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder={t("home.searchPlaceholder")}
+                className="h-10 pe-28 text-[13px] md:h-11 md:pe-32 md:text-sm"
+                endIcon={
+                  <span className="pointer-events-none flex items-center gap-3">
+                    <span aria-hidden className="h-5 w-px bg-border" />
+                    <span className="whitespace-nowrap text-xs text-muted">{t("common.results", { count: filtered.length })}</span>
+                  </span>
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <Select size="sm" ariaLabel={t("common.sortBy")} value={sort} onValueChange={(v) => setSort(v as Sort)} className="h-10 w-auto flex-1 md:h-11 md:w-52 md:flex-none" options={[
+                { value: "score", label: <OptionRow icon={<Sparkles className="size-4 text-brand-600" />} label={t("universities.sortScore")} /> },
+                { value: "name", label: <OptionRow icon={<ArrowDownAZ className="size-4 text-brand-600" />} label={t("universities.sortName")} /> },
+                { value: "rank", label: <OptionRow icon={<Trophy className="size-4 text-brand-600" />} label={t("universities.sortRank")} /> },
+                { value: "tuitionAsc", label: <OptionRow icon={<ArrowDownNarrowWide className="size-4 text-brand-600" />} label={t("universities.sortTuitionAsc")} /> },
+                { value: "tuitionDesc", label: <OptionRow icon={<ArrowUpNarrowWide className="size-4 text-brand-600" />} label={t("universities.sortTuitionDesc")} /> },
               ]} />
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="lg:hidden"><SlidersHorizontal className="size-4" />{t("common.filters")}{activeCount > 0 && <Badge variant="brand">{activeCount}</Badge>}</Button>
+                  <Button variant="outline" size="sm" className="h-10 flex-1 rounded-lg md:h-11 md:flex-none lg:hidden"><SlidersHorizontal className="size-4 text-brand-600" />{t("common.filters")}{activeCount > 0 && <Badge variant="brand">{activeCount}</Badge>}</Button>
                 </DialogTrigger>
                 <DialogContent side="bottom" heading={t("common.filters")}>
                   <div className="rounded-2xl border border-border bg-background px-3 py-3.5">{Panel}</div>
                   <div className="sticky -bottom-1 -mx-1 mt-5 flex items-center gap-2 border-t border-border bg-background px-1 pb-1 pt-3">
-                    {activeCount > 0 && <Button variant="ghost" size="sm" onClick={reset}><X className="size-4" />{t("common.clear")}</Button>}
                     <DialogClose asChild>
-                      <Button className="flex-1" size="sm">{t("universities.showResults", { count: filtered.length })}</Button>
-                      </DialogClose>
+                      <Button className="min-w-0 flex-1 transition-[flex-basis] duration-300 ease-out" size="sm">{t("universities.showResults", { count: filtered.length })}</Button>
+                    </DialogClose>
+                    {/* Always mounted so the sibling "show results" button can ease into its new
+                        width instead of snapping when the clear action appears. */}
+                    <div
+                      aria-hidden={activeCount === 0}
+                      className={cn(
+                        "overflow-hidden transition-all duration-300 ease-out",
+                        activeCount > 0 ? "ms-0 max-w-40 opacity-100" : "-ms-2 max-w-0 opacity-0",
+                      )}
+                    >
+                      <Button variant="ghost" size="sm" onClick={reset} tabIndex={activeCount > 0 ? undefined : -1} className="whitespace-nowrap">
+                        <X className="size-4" />
+                        {t("common.clear")}
+                      </Button>
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -295,7 +343,6 @@ export function UniversityExplorer({ universities, districts, categories }: { un
             </div>
           )}
 
-          <p className="mt-2 text-xs text-muted">{t("common.results", { count: filtered.length })}</p>
         </div>
 
         {filtered.length === 0 ? (
