@@ -4,7 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import { Menu, Search, ChevronDown, Sparkles } from "lucide-react";
+import { Search, ChevronDown, Speech, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger, Popover, PopoverContent, PopoverTrigger } from "@/components/ui/primitives";
@@ -35,6 +35,7 @@ export function Header() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = React.useState(false);
   const [searchOpen, setSearchOpen] = React.useState(false);
+  const [menuOpen, setMenuOpen] = React.useState(false);
 
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -54,16 +55,38 @@ export function Header() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  React.useEffect(() => setMenuOpen(false), [pathname]);
+
+  // The panel owns the viewport while open; stop the page behind it from scrolling.
+  React.useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    // Drives the page blur in globals.css ("Mobile menu: blur the page behind the panel").
+    document.body.dataset.menuOpen = "true";
+    return () => {
+      document.body.style.overflow = prev;
+      delete document.body.dataset.menuOpen;
+    };
+  }, [menuOpen]);
+
+  React.useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
   return (
-    <header className={cn("sticky top-0 z-50 w-full transition-all duration-300", scrolled ? "glass border-b border-border/70 shadow-sm" : "bg-transparent")}>
-      <div className="container-x flex h-16 items-center justify-between gap-4 md:h-[4.5rem]">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5 focus-ring rounded-full" aria-label="Eduways Academy">
-          <Image src="/brand/logo.jpg" alt="Eduways Academy" width={40} height={40} className="size-10 rounded-full shadow-sm" priority />
-          <span className="hidden flex-col leading-none sm:flex">
-            <span className="text-[15px] font-extrabold tracking-tight text-brand-900">EDUWAYS</span>
-            <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted">Academy · Istanbul</span>
+    <header className={cn("sticky top-0 z-50 w-full transition-all duration-300", scrolled || menuOpen ? "glass border-b border-border/70 shadow-sm" : "bg-transparent")}>
+      <div className="container-x relative z-10 flex h-16 items-center justify-between gap-2 sm:gap-4 md:h-[4.5rem]">
+        <Link href="/" className="flex min-w-0 items-center gap-2.5 focus-ring rounded-full" aria-label="Eduways Academy">
+          <Image src="/brand/logo.jpg" alt="Eduways Academy" width={40} height={40} className="size-10 shrink-0 rounded-full shadow-sm" priority />
+          <span className="flex min-w-0 flex-col leading-none">
+            <span className="truncate text-[15px] font-extrabold tracking-tight text-brand-900">EDUWAYS</span>
+            <span className="truncate text-[10px] font-medium uppercase tracking-[0.18em] text-muted">Academy · Istanbul</span>
           </span>
         </Link>
 
@@ -100,7 +123,8 @@ export function Header() {
           </Popover>
         </nav>
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1.5 md:gap-2">
+          <LocaleSwitcher />
           <button
             onClick={() => setSearchOpen(true)}
             className="hidden h-10 items-center gap-2 rounded-full border border-border bg-background/70 px-3.5 text-sm text-muted transition-colors hover:border-brand-300 hover:text-foreground focus-ring md:inline-flex"
@@ -113,45 +137,107 @@ export function Header() {
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSearchOpen(true)} aria-label={t("search")}>
             <Search />
           </Button>
-          <LocaleSwitcher />
           <Button asChild size="md" className="hidden sm:inline-flex">
-            <Link href="/consultation">
-              <Sparkles className="size-4" />
+            <Link href="/consultation" className="rtl:flex-row-reverse">
+              <Speech className="size-4" />
               {t("consultation")}
             </Link>
           </Button>
-          <MobileMenu />
+          <MobileMenuButton open={menuOpen} onToggle={() => setMenuOpen((o) => !o)} label={t("menu")} />
         </div>
       </div>
+      <MobilePanel open={menuOpen} onNavigate={() => setMenuOpen(false)} isActive={isActive} />
       <CommandSearch open={searchOpen} onOpenChange={setSearchOpen} locale={locale} />
     </header>
   );
 }
 
-function MobileMenu() {
-  const t = useTranslations("nav");
-  const [open, setOpen] = React.useState(false);
-  const pathname = usePathname();
-  React.useEffect(() => setOpen(false), [pathname]);
+function MobileMenuButton({ open, onToggle, label }: { open: boolean; onToggle: () => void; label: string }) {
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="lg:hidden" aria-label={t("menu")}>
-          <Menu />
-        </Button>
-      </DialogTrigger>
-      <DialogContent side="end" heading={<span className="text-brand-900">EDUWAYS</span>} className="flex flex-col">
-        <nav className="flex flex-col gap-1" aria-label="Mobile">
-          {[...NAV, ...MORE].map((n) => (
-            <Link key={n.key} href={n.href} className="rounded-xl px-3 py-2.5 text-base font-medium hover:bg-brand-50 hover:text-brand-800">
-              {t(n.key)}
-            </Link>
-          ))}
+    <Button variant="ghost" size="icon" className="lg:hidden" aria-label={label} aria-expanded={open} onClick={onToggle}>
+      {/* Three bars that morph into an X: the outer two rotate onto the centre line,
+          the middle one fades. Driven by `open` so it animates both ways. */}
+      <span className="relative block size-5" aria-hidden>
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className={cn(
+              "absolute inset-x-0 mx-auto block h-0.5 w-5 rounded-full bg-current transition-all duration-300 ease-out",
+              i === 0 && (open ? "top-1/2 -translate-y-1/2 rotate-45" : "top-1"),
+              i === 1 && (open ? "top-1/2 -translate-y-1/2 opacity-0" : "top-1/2 -translate-y-1/2 opacity-100"),
+              i === 2 && (open ? "top-1/2 -translate-y-1/2 -rotate-45" : "bottom-1 top-auto"),
+            )}
+          />
+        ))}
+      </span>
+    </Button>
+  );
+}
+
+/* Slides in from the right and fills everything below the header bar, which stays
+   visible and interactive above it. */
+function MobilePanel({ open, onNavigate, isActive }: { open: boolean; onNavigate: () => void; isActive: (href: string) => boolean }) {
+  const t = useTranslations("nav");
+  return (
+    <div
+      id="mobile-menu"
+      aria-hidden={!open}
+      className="fixed inset-x-0 bottom-0 top-16 z-40 md:top-[4.5rem] lg:hidden"
+      style={{
+        /* Physical transform, not a `translate-x-*` utility: Tailwind flips those under
+           `dir="rtl"`, which would slide the panel in from the left in Persian. */
+        transform: open ? "translateX(0)" : "translateX(100%)",
+        /* Not `display:none` — that cannot animate. Visibility is delayed on close so the
+           slide-out plays out first, then the panel drops out of hit-testing. */
+        visibility: open ? "visible" : "hidden",
+        transition: "transform 300ms ease-out, visibility 0s linear " + (open ? "0s" : "300ms"),
+      }}
+    >
+      {/* Opaque: the page behind is blurred by CSS instead (globals.css → "Mobile menu"),
+          so the panel does not need a backdrop-filter of its own. */}
+      <div aria-hidden className="absolute inset-0 -z-10 bg-background" />
+      <div className="flex h-full flex-col">
+        {/* Only the links scroll; the CTA below stays pinned to the bottom of the panel. */}
+        <nav className="flex flex-1 flex-col overflow-y-auto overscroll-contain" aria-label="Mobile">
+          {[...NAV, ...MORE].map((n, i) => {
+            const active = isActive(n.href);
+            return (
+              <Link
+                key={n.key}
+                href={n.href}
+                onClick={onNavigate}
+                tabIndex={open ? undefined : -1}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "group flex items-center justify-between gap-4 border-b border-border/70 px-6 py-5 text-2xl font-bold tracking-tight transition-colors",
+                  active ? "text-brand-700" : "text-foreground hover:text-brand-700",
+                )}
+                style={{
+                  /* Rows fly in one after another, trailing the panel's own slide. Physical
+                     translate (not a utility) so RTL keeps the same right-to-left motion. */
+                  opacity: open ? 1 : 0,
+                  transform: open ? "translateX(0)" : "translateX(2rem)",
+                  transition: open
+                    ? `opacity 220ms ease-out ${80 + i * 35}ms, transform 220ms cubic-bezier(0.22,1,0.36,1) ${80 + i * 35}ms`
+                    : "opacity 120ms ease-in, transform 120ms ease-in",
+                }}
+              >
+                <span>{t(n.key)}</span>
+                {/* Points the way the reader travels: flipped in RTL. */}
+                <ArrowRight className="size-5 shrink-0 text-muted transition-transform group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1" />
+              </Link>
+            );
+          })}
         </nav>
-        <Button asChild size="lg" className="mt-6">
-          <Link href="/consultation">{t("consultation")}</Link>
-        </Button>
-      </DialogContent>
-    </Dialog>
+        <div className="shrink-0 bg-background ps-6 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pe-[5.5rem]">
+          <Button asChild size="lg" className="w-full">
+            <Link href="/consultation" onClick={onNavigate} tabIndex={open ? undefined : -1} className="rtl:flex-row-reverse">
+              <Speech className="size-4" />
+              {t("consultation")}
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

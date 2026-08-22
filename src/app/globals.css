@@ -204,6 +204,27 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 @keyframes collapsible-down { from { height: 0; opacity: 0; } to { height: var(--radix-collapsible-content-height); opacity: 1; } }
 @keyframes collapsible-up { from { height: var(--radix-collapsible-content-height); opacity: 1; } to { height: 0; opacity: 0; } }
 
+/* ---------- Mobile menu: blur the page behind the panel ----------
+   Only `main`/`footer` are blurred — never a shared ancestor of the header, since the
+   menu panel lives inside <header> and would be blurred along with the page.
+   The filter is applied to the page content itself (not `backdrop-filter` on the panel)
+   so the whole page visibly defocuses as the panel slides in. */
+.site-shell > main,
+.site-shell > footer {
+  transition: filter 300ms ease-out, opacity 300ms ease-out;
+}
+body[data-menu-open="true"] .site-shell > main,
+body[data-menu-open="true"] .site-shell > footer {
+  filter: blur(8px);
+  opacity: 0.6;
+  /* The page is inert while the menu owns the screen. */
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-shell > main,
+  .site-shell > footer { transition: none; }
+}
+
 /* ---------- Graduation trail (site-wide scroll rider) ----------
    Layering contract inside `.site-shell` (an isolated stacking context):
      0  section backgrounds — non-positioned blocks, or positioned wrappers with z-index auto
