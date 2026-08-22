@@ -92,12 +92,14 @@ export function ProgramExplorer({ programs, categories, universities }: { progra
     return out;
   }, [programs, q, level, lang, cat, uni, range, sort, locale]);
 
-  /** Inline autocomplete: program names, fields and universities matching what's typed. */
+  /** Inline autocomplete: every program, field and university, narrowed to what's typed.
+      With an empty box this is the full browsable list, so the dropdown scrolls. */
   const suggestions = React.useMemo<Suggestion[]>(() => {
     const ql = norm(q);
-    if (ql.length < 2) return [];
 
+    // an empty query matches everything, all at equal rank
     const rank = (hay: string) => {
+      if (!ql) return 0;
       const h = norm(hay);
       return h.startsWith(ql) ? 0 : h.includes(ql) ? 1 : -1;
     };
@@ -114,12 +116,14 @@ export function ProgramExplorer({ programs, categories, universities }: { progra
       } else m.set(key, { label, count: 1, rank: r });
     };
 
+    const catById = new Map(categories.map((c) => [c.id, c]));
+
     for (const p of programs) {
       const label = tx(p.name, locale);
       const r = Math.max(rank(p.name.fa), rank(p.name.en));
       if (r >= 0) bump(progs, label.toLowerCase(), label, r);
 
-      const c = categories.find((x) => x.id === p.category_id);
+      const c = catById.get(p.category_id ?? "");
       if (c) {
         const cr = Math.max(rank(c.name.fa), rank(c.name.en));
         if (cr >= 0) bump(cats, c.id, tx(c.name, locale), cr);
@@ -129,16 +133,15 @@ export function ProgramExplorer({ programs, categories, universities }: { progra
       if (ur >= 0) bump(unis, p.university.slug, tx(p.university.name, locale), ur);
     }
 
-    const take = <T,>(m: Map<string, { label: string; count: number; rank: number }>, n: number, make: (key: string, v: { label: string; count: number }) => T) =>
+    const take = <T,>(m: Map<string, { label: string; count: number; rank: number }>, make: (key: string, v: { label: string; count: number }) => T) =>
       [...m.entries()]
         .sort((a, b) => a[1].rank - b[1].rank || b[1].count - a[1].count || a[1].label.localeCompare(b[1].label, locale))
-        .slice(0, n)
         .map(([key, v]) => make(key, v));
 
     return [
-      ...take(progs, 5, (_k, v) => ({ kind: "program" as const, value: v.label, label: v.label, subtitle: t("common.programsCount", { count: v.count }) })),
-      ...take(cats, 2, (id, v) => ({ kind: "field" as const, value: "", label: v.label, subtitle: `${t("programs.field")} · ${t("common.programsCount", { count: v.count })}`, category: id })),
-      ...take(unis, 3, (slug, v) => ({ kind: "university" as const, value: "", label: v.label, subtitle: `${t("programs.university")} · ${t("common.programsCount", { count: v.count })}`, university: slug })),
+      ...take(progs, (_k, v) => ({ kind: "program" as const, value: v.label, label: v.label, subtitle: t("common.programsCount", { count: v.count }) })),
+      ...take(cats, (id, v) => ({ kind: "field" as const, value: "", label: v.label, subtitle: `${t("programs.field")} · ${t("common.programsCount", { count: v.count })}`, category: id })),
+      ...take(unis, (slug, v) => ({ kind: "university" as const, value: "", label: v.label, subtitle: `${t("programs.university")} · ${t("common.programsCount", { count: v.count })}`, university: slug })),
     ];
   }, [programs, categories, q, locale, t]);
 
@@ -154,8 +157,8 @@ export function ProgramExplorer({ programs, categories, universities }: { progra
 
   return (
     <section className="container-x py-10">
-      <div className="card mb-6 grid gap-4 p-5 md:grid-cols-[1.4fr_1fr_1fr]">
-        <ProgramSearch value={q} onChange={setQ} onPick={applySuggestion} suggestions={suggestions} placeholder={t("programs.placeholder")} className="md:col-span-3" />
+      <div className="card mb-6 grid gap-4 bg-surface/40 p-5 md:grid-cols-[1.4fr_1fr_1fr]">
+        <ProgramSearch value={q} onChange={setQ} onPick={applySuggestion} suggestions={suggestions} placeholder={t("programs.placeholder")} count={t("common.results", { count: list.length })} className="md:col-span-3" />
         <Filter label={t("programs.university")}>
           <Select
             ariaLabel={t("programs.university")}
@@ -190,29 +193,48 @@ export function ProgramExplorer({ programs, categories, universities }: { progra
             ]}
           />
         </Filter>
-        <div className="flex flex-wrap items-center gap-3 md:col-span-2">
-          <Segmented size="sm" ariaLabel={t("programs.level")} value={level} onChange={setLevel} options={[{ value: "all", label: t("common.all") }, ...LEVELS.map((l) => ({ value: l, label: t(`common.${l}`) }))]} />
-          <Segmented size="sm" ariaLabel={t("programs.language")} value={lang} onChange={setLang} options={[{ value: "all", label: t("common.all") }, { value: "en", label: t("common.en") }, { value: "tr", label: t("common.tr") }]} />
-        </div>
         <Filter label={t("programs.tuition")} value={isFullRange ? t("common.all") : formatRange(range[0], range[1], locale)}>
           <Slider value={range} onValueChange={([lo, hi]) => setRange([lo, hi])} min={TUITION_MIN} max={TUITION_MAX} step={500} minStepsBetweenThumbs={1} />
         </Filter>
+        {/* Below md these two are dropdowns: the segmented pills overflow a phone's width
+            once "PhD" and the language options are laid out side by side. */}
+        <div className="grid grid-cols-2 gap-3 md:hidden">
+          <Filter label={t("programs.level")}>
+            <Select
+              ariaLabel={t("programs.level")}
+              value={level}
+              onValueChange={(v) => setLevel(v as never)}
+              options={[{ value: "all", label: t("common.all") }, ...LEVELS.map((l) => ({ value: l, label: t(`common.${l}`) }))]}
+            />
+          </Filter>
+          <Filter label={t("programs.language")}>
+            <Select
+              ariaLabel={t("programs.language")}
+              value={lang}
+              onValueChange={(v) => setLang(v as never)}
+              options={[{ value: "all", label: t("common.all") }, { value: "en", label: t("common.en") }, { value: "tr", label: t("common.tr") }]}
+            />
+          </Filter>
+        </div>
+        <div className="hidden flex-wrap items-center gap-3 md:col-span-2 md:flex">
+          <Segmented size="sm" ariaLabel={t("programs.level")} value={level} onChange={setLevel} options={[{ value: "all", label: t("common.all") }, ...LEVELS.map((l) => ({ value: l, label: t(`common.${l}`) }))]} />
+          <Segmented size="sm" ariaLabel={t("programs.language")} value={lang} onChange={setLang} options={[{ value: "all", label: t("common.all") }, { value: "en", label: t("common.en") }, { value: "tr", label: t("common.tr") }]} />
+        </div>
       </div>
 
-      <p className="mb-4 text-sm text-muted">{t("common.results", { count: list.length })}</p>
       {list.length === 0 ? (
         <Empty title={t("common.noResults")} />
       ) : (
         <>
-          <div className="overflow-hidden rounded-3xl border border-border">
+          <div className="overflow-hidden rounded-3xl border border-border bg-surface/40">
             <table className="w-full text-sm">
-              <thead className="bg-surface text-xs uppercase tracking-wide text-muted">
+              <thead className="bg-surface/60 text-xs uppercase tracking-wide text-muted">
                 <tr>
                   <th className="px-4 py-3 text-start font-semibold">{t("programs.title")}</th>
                   <th className="hidden px-4 py-3 text-start font-semibold md:table-cell">{t("programs.university")}</th>
-                  <th className="hidden px-4 py-3 text-start font-semibold sm:table-cell">{t("programs.level")}</th>
-                  <th className="hidden px-4 py-3 text-start font-semibold lg:table-cell">{t("programs.language")}</th>
-                  <th className="px-4 py-3 text-end font-semibold">{t("programs.tuition")}</th>
+                  <th className="hidden px-4 py-3 text-center font-semibold sm:table-cell">{t("programs.level")}</th>
+                  <th className="hidden px-4 py-3 text-center font-semibold lg:table-cell">{t("programs.language")}</th>
+                  <th className="whitespace-nowrap px-4 py-3 text-center font-semibold">{t("programs.tuition")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -228,11 +250,12 @@ export function ProgramExplorer({ programs, categories, universities }: { progra
                         <span className="line-clamp-1">{tx(p.university.name, locale)}</span>
                       </Link>
                     </td>
-                    <td className="hidden px-4 py-3 sm:table-cell"><Badge variant="brand">{t(`common.${p.level}`)}</Badge></td>
-                    <td className="hidden px-4 py-3 lg:table-cell"><Badge variant={p.language === "tr" ? "outline" : "accent"}>{t(`common.${p.language}` as never)}</Badge></td>
-                    <td className="px-4 py-3 text-end font-bold tabular">
+                    <td className="hidden px-4 py-3 text-center sm:table-cell"><Badge variant="brand">{t(`common.${p.level}`)}</Badge></td>
+                    <td className="hidden px-4 py-3 text-center lg:table-cell"><Badge variant={p.language === "tr-en" ? "purple" : p.language === "tr" ? "warning" : "accent"}>{t(`common.${p.language}` as never)}</Badge></td>
+                    {/* the hover arrow is taken out of flow, so only the price is centred under the header */}
+                    <td className="relative whitespace-nowrap px-4 py-3 text-center font-bold tabular">
                       {p.tuition_usd === 0 ? t("common.free") : formatUSD(p.tuition_usd, locale)}
-                      <Link href={`/universities/${p.university.slug}?tab=programs`} className="ms-2 inline-flex text-muted opacity-0 transition-opacity group-hover:opacity-100" aria-label={t("programs.viewUniversity")}><ArrowUpRight className="size-4 rtl:-scale-x-100" /></Link>
+                      <Link href={`/universities/${p.university.slug}?tab=programs`} className="absolute inset-y-0 end-2 inline-flex items-center text-muted opacity-0 transition-opacity group-hover:opacity-100" aria-label={t("programs.viewUniversity")}><ArrowUpRight className="size-4 rtl:-scale-x-100" /></Link>
                     </td>
                   </tr>
                 ))}
