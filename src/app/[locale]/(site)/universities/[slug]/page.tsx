@@ -74,7 +74,7 @@ export default async function UniversityPage({ params }: { params: Promise<{ loc
               <UniversityLogo name={u.short_name || u.name.en} logo={u.logo_url} size={84} className="rounded-3xl text-2xl" />
               <div>
                 <div className="flex flex-wrap gap-1.5">
-                  <Badge variant={u.type === "public" ? "brand" : "accent"}>{t(`common.${u.type}`)}</Badge>
+                  <Badge variant={u.type === "public" ? "success" : "accent"}>{t(`common.${u.type}`)}</Badge>
                   {u.best_rank && <Badge variant="dark">#{formatNumber(u.best_rank, locale)} TR</Badge>}
                   {u.eduways_discount_pct ? <Badge variant="success"><BadgePercent className="size-3" />{t("common.upTo")} {formatNumber(u.eduways_discount_pct, locale)}٪ {t("common.discount")}</Badge> : null}
                 </div>

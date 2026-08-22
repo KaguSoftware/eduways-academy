@@ -389,7 +389,7 @@ export function Badge({ className, variant = "default", ...props }: React.HTMLAt
     default: "bg-surface-2 text-foreground",
     brand: "bg-brand-50 text-brand-800",
     accent: "bg-accent-500/15 text-accent-600",
-    success: "bg-success/10 text-success",
+    success: "bg-success/12 text-success",
     warning: "bg-warning/15 text-warning",
     danger: "bg-danger/10 text-danger",
     purple: "bg-purple/15 text-purple",

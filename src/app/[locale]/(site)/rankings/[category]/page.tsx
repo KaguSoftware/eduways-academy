@@ -14,7 +14,7 @@ const FIXED = ["overall", "best-value", "cheapest", "english-taught", "public", 
 export async function generateStaticParams() {
   const repo = await getRepo();
   const cats = await repo.listCategories();
-  const keys = [...FIXED, ...cats.map((c) => `field-${c.slug}`)];
+  const keys = [...FIXED, "field-all", ...cats.map((c) => `field-${c.slug}`)];
   return routing.locales.flatMap((locale) => keys.map((category) => ({ locale, category })));
 }
 
@@ -22,6 +22,7 @@ async function titleFor(key: string, locale: string) {
   const t = await getTranslations({ locale, namespace: "rankings" });
   const map: Record<string, string> = { overall: t("overall"), "best-value": t("bestValue"), cheapest: t("cheapest"), "english-taught": t("englishTaught"), public: t("public"), private: t("private") };
   if (map[key]) return map[key];
+  if (key === "field-all") return `${t("byField")}: ${t("allFields")}`;
   const repo = await getRepo();
   const cats = await repo.listCategories();
   const c = cats.find((c) => `field-${c.slug}` === key);
@@ -44,8 +45,9 @@ export default async function RankingCategoryPage({ params }: { params: Promise<
   const loc = await getLocale();
   const repo = await getRepo();
   const [all, categories] = await Promise.all([repo.listUniversities(), repo.listCategories()]);
-  const list = rankingList(category as RankingKey, all, categories);
   const fieldSlug = category.startsWith("field-") ? category.slice("field-".length) : undefined;
+  const isAllFields = fieldSlug === "all";
+  const list = isAllFields ? [] : rankingList(category as RankingKey, all, categories);
 
   return (
     <>
@@ -57,10 +59,21 @@ export default async function RankingCategoryPage({ params }: { params: Promise<
               <h2 className="text-base font-bold">{t("rankings.byField")}</h2>
               <p className="mt-1 text-sm text-muted">{t("rankings.byFieldHint")}</p>
             </div>
-            <FieldSelect categories={categories} locale={loc} value={fieldSlug} placeholder={t("rankings.byFieldPlaceholder")} ariaLabel={t("rankings.byField")} className="w-full sm:w-72" />
+            <FieldSelect categories={categories} locale={loc} value={fieldSlug} placeholder={t("rankings.byFieldPlaceholder")} allLabel={t("rankings.allFields")} ariaLabel={t("rankings.byField")} className="w-full sm:w-72" />
           </div>
         ) : null}
-        <RankingTable list={list} metricKey={category as RankingKey} />
+        {isAllFields ? (
+          <div className="flex flex-col gap-10">
+            {categories.map((c) => (
+              <div key={c.id}>
+                <h3 className="mb-3 text-lg font-bold">{tx(c.name, loc)}</h3>
+                <RankingTable list={rankingList(`field-${c.slug}`, all, categories)} metricKey={`field-${c.slug}`} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <RankingTable list={list} metricKey={category as RankingKey} />
+        )}
         <p className="mt-6 text-xs text-muted">{t("rankings.methodologyBody")}</p>
       </section>
       <CtaBanner compact />
