@@ -2,7 +2,8 @@
   "meta": {
     "siteName": "Eduways Academy",
     "tagline": "Study in Istanbul, the easy way",
-    "description": "Eduways Academy helps Persian-speaking students get admitted to the best universities in Istanbul and Turkey — with negotiated discounts, scholarships, visa, flights and accommodation handled end-to-end."
+    "description": "Eduways Academy helps Persian-speaking students get admitted to the best universities in Istanbul and Turkey — with negotiated discounts, scholarships, visa, flights and accommodation handled end-to-end.",
+    "alt": "Eduways Academy"
   },
   "nav": {
     "home": "Home",
@@ -25,7 +26,9 @@
     "language": "Language",
     "explore": "Explore",
     "company": "Company",
-    "tools": "Tools"
+    "tools": "Tools",
+    "primary": "Primary",
+    "mobile": "Mobile"
   },
   "common": {
     "readMore": "Read more",
@@ -86,7 +89,23 @@
     "programsCount": "{count, plural, one {# program} other {# programs}}",
     "universitiesCount": "{count, plural, one {# university} other {# universities}}",
     "min": "Min",
-    "max": "Max"
+    "max": "Max",
+    "listSeparator": ", ",
+    "money": "${value}",
+    "moneyRange": "${min}–{max}",
+    "close": "Close",
+    "decrease": "Decrease",
+    "increase": "Increase",
+    "removeFilter": "Remove filter",
+    "remove": "Remove",
+    "breadcrumb": "Breadcrumb",
+    "enShort": "EN",
+    "trShort": "TR",
+    "lang": {
+      "fa": "فارسی",
+      "en": "English"
+    },
+    "percent": "%"
   },
   "home": {
     "heroEyebrow": "Istanbul · Türkiye · 60+ partner universities",
@@ -206,7 +225,8 @@
     "anyTuition": "Any tuition",
     "filterCampus": "Campus",
     "showResults": "Show {count, plural, one {# result} other {# results}}",
-    "filterTuitionShort": "Tuition"
+    "filterTuitionShort": "Tuition",
+    "waMessage": "Hello Eduways! I have a question about admission to {name}."
   },
   "programs": {
     "title": "Programs",
@@ -245,7 +265,8 @@
     "colScore": "Eduways",
     "colValue": "Value",
     "colPrograms": "Programs",
-    "viewFull": "View full ranking"
+    "viewFull": "View full ranking",
+    "colWorld": "World"
   },
   "districts": {
     "title": "Istanbul districts for students",
@@ -264,7 +285,8 @@
     "howItWorks": "How it works",
     "pricing": "Pricing",
     "cta": "Ask about this service",
-    "included": "What's included"
+    "included": "What's included",
+    "waMessage": "Hello Eduways! I have a question about “{title}”."
   },
   "calculator": {
     "title": "Cost of studying in Istanbul",
@@ -360,7 +382,9 @@
       "US": "United States",
       "AE": "UAE",
       "OTHER": "Other"
-    }
+    },
+    "prefillUniversity": "Preferred university: {name}",
+    "phonePlaceholder": "+98 912 000 0000"
   },
   "faq": {
     "title": "Frequently asked questions",
@@ -462,7 +486,6 @@
     "country": "Country",
     "name": "Name",
     "phone": "Phone",
-    "help": "Help",
     "idHint": "Unique ID — lowercase letters, numbers and dashes. Cannot be changed later.",
     "welcome": "Welcome back",
     "overview": "Overview",
@@ -481,6 +504,198 @@
     "moveDown": "Move down",
     "stepTitle": "Step title",
     "stepBody": "Step description",
-    "noSteps": "No steps added yet."
+    "noSteps": "No steps added yet.",
+    "markdownHint": "Markdown",
+    "invalidJson": "Invalid JSON",
+    "loginTitle": "Admin login",
+    "dataSourceDb": "Supabase",
+    "dataSourceSeed": "seed",
+    "prevPage": "Previous page",
+    "nextPage": "Next page",
+    "errFk": "The referenced record does not exist — pick an existing one from the dropdown.",
+    "errDuplicate": "A record with this id or slug already exists.",
+    "errUnauthorized": "You are not authorized.",
+    "errNoDb": "No database is connected.",
+    "errNoServiceRole": "The Supabase service-role key is not configured.",
+    "errUnknownTable": "Unknown table.",
+    "errDb": "Could not save.",
+    "tables": {
+      "universities": {
+        "label": "Universities",
+        "singular": "University"
+      },
+      "programs": {
+        "label": "Programs",
+        "singular": "Program"
+      },
+      "scholarships": {
+        "label": "Scholarships",
+        "singular": "Scholarship"
+      },
+      "rankings": {
+        "label": "Rankings",
+        "singular": "Ranking"
+      },
+      "districts": {
+        "label": "Districts",
+        "singular": "District"
+      },
+      "services": {
+        "label": "Services",
+        "singular": "Service"
+      },
+      "stories": {
+        "label": "Stories",
+        "singular": "Story"
+      },
+      "posts": {
+        "label": "Posts",
+        "singular": "Post"
+      },
+      "faqs": {
+        "label": "FAQs",
+        "singular": "FAQ"
+      },
+      "site_settings": {
+        "label": "Settings",
+        "singular": "Setting"
+      }
+    },
+    "sections": {
+      "basic": "Basics",
+      "content": "Content",
+      "numbers": "Numbers",
+      "meta": "Other"
+    },
+    "fields": {
+      "id": "ID",
+      "slug": "Slug",
+      "name": "Name",
+      "title": "Title",
+      "short_name": "Short name",
+      "type": "Type",
+      "district_id": "District",
+      "status": "Status",
+      "is_featured": "Featured",
+      "description": "Description",
+      "highlights": "Highlights",
+      "website": "Website",
+      "logo_url": "Logo URL",
+      "cover_url": "Cover URL",
+      "languages": "Languages",
+      "avg_tuition_min": "Tuition min (USD)",
+      "avg_tuition_max": "Tuition max (USD)",
+      "eduways_discount_pct": "Eduways discount %",
+      "founded": "Founded",
+      "student_count": "Students",
+      "intl_student_pct": "International %",
+      "has_dorm": "Has dorm",
+      "lat": "Latitude",
+      "lng": "Longitude",
+      "university_id": "University",
+      "level": "Level",
+      "language": "Language",
+      "category_id": "Category",
+      "faculty": "Faculty",
+      "tuition_note": "Tuition note",
+      "duration_years": "Duration (years)",
+      "tuition_usd": "Tuition (USD)",
+      "discount_pct": "Discount %",
+      "valid_until": "Valid until",
+      "conditions": "Conditions",
+      "source": "Source",
+      "year": "Year",
+      "rank_national": "National rank",
+      "rank_world": "World rank",
+      "source_url": "Source URL",
+      "side": "Side",
+      "avg_rent_usd": "Avg rent (USD/month)",
+      "icon": "Lucide icon name",
+      "order": "Order",
+      "summary": "Summary",
+      "body": "Body",
+      "price_note": "Price note",
+      "steps": "Steps",
+      "student_name": "Student name",
+      "country": "Country code",
+      "program": "Program",
+      "quote": "Quote",
+      "photo_url": "Photo URL",
+      "year_enrolled": "Year enrolled",
+      "published_at": "Published at",
+      "tags": "Tags",
+      "excerpt": "Excerpt",
+      "author": "Author",
+      "reading_minutes": "Reading minutes",
+      "category": "Category",
+      "question": "Question",
+      "answer": "Answer",
+      "key": "Key",
+      "value": "Value (JSON)"
+    },
+    "tableFields": {
+      "universities": {
+        "slug": "Slug"
+      },
+      "programs": {
+        "name": "Name"
+      },
+      "districts": {
+        "description": "Description"
+      },
+      "scholarships": {
+        "university_id": "University (empty = global)"
+      },
+      "posts": {
+        "body": "Body (markdown)"
+      }
+    },
+    "fieldHelp": {
+      "district_id": "Pick an existing district",
+      "highlights": "One highlight per line",
+      "languages": "Separate with commas only: tr, en",
+      "icon": "e.g. GraduationCap",
+      "steps": "Add the steps of this service one by one",
+      "country": "IR, AF, TJ…",
+      "tags": "Comma separated"
+    },
+    "tableFieldHelp": {
+      "universities": {
+        "id": "e.g. uni-koc-university"
+      }
+    },
+    "options": {
+      "status": {
+        "published": "Published",
+        "draft": "Draft"
+      },
+      "type": {
+        "university": "University",
+        "eduways": "Eduways",
+        "government": "Government"
+      },
+      "category": {
+        "general": "General",
+        "admission": "Admission",
+        "costs": "Costs",
+        "visa": "Visa",
+        "life": "Life"
+      },
+      "source": {
+        "urap": "URAP",
+        "the": "THE",
+        "qs": "QS",
+        "eduways": "Eduways"
+      }
+    }
+  },
+  "legal": {
+    "privacy": {
+      "p1": "The details you submit in the consultation form (name, phone, email, country, major and budget) are used only to contact you about studying in Türkiye and are never shared with third parties.",
+      "p2": "You may request deletion of your data at any time via WhatsApp or email."
+    },
+    "terms": {
+      "p1": "University, tuition and ranking information on this site is provided for guidance and may change. Final tuition and conditions are confirmed by the university at application time. Eduways services are provided under a written agreement."
+    }
   }
 }

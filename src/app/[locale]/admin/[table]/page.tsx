@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { Plus } from "lucide-react";
 import { requireStaff } from "@/lib/admin/auth";
 import { TABLES } from "@/lib/admin/specs";
+import { adminText } from "@/lib/admin/labels";
 import { listRows } from "@/lib/admin/data";
 import { formatNumber, tx } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -16,9 +17,11 @@ export default async function AdminTablePage({ params }: { params: Promise<{ loc
   setRequestLocale(locale);
   await requireStaff(locale);
   const t = await getTranslations("admin");
+  const A = adminText(await getTranslations(), table);
   const spec = TABLES[table];
   if (!spec) notFound();
   const rows = await listRows(table);
+  const tSep = (await getTranslations("common"))("listSeparator");
   const cols = spec.listFields.map((k) => spec.fields.find((f) => f.key === k)!).filter(Boolean);
 
   const items = rows.map((r) => ({
@@ -30,11 +33,10 @@ export default async function AdminTablePage({ params }: { params: Promise<{ loc
       if (f.type === "boolean") return { kind: "bool", value: Boolean(v) };
       if (f.type === "number") return { kind: "text", text: formatNumber(Number(v), locale, { useGrouping: f.key !== "year" && f.key !== "order" }), mono: true };
       if (f.type === "select") {
-        const opt = f.options?.find((o) => o.value === v);
-        return { kind: "badge", text: opt ? tx(opt.label, locale) : String(v), tone: v === "published" ? "success" : v === "draft" ? "warning" : "brand" };
+        return { kind: "badge", text: A.option(f, String(v)), tone: v === "published" ? "success" : v === "draft" ? "warning" : "brand" };
       }
       if (f.type === "date") return { kind: "date", iso: String(v) };
-      if (f.type === "tags") return { kind: "text", text: Array.isArray(v) ? (v as string[]).join("، ") : String(v) };
+      if (f.type === "tags") return { kind: "text", text: Array.isArray(v) ? (v as string[]).join(tSep) : String(v) };
       if (typeof v === "object") return { kind: "text", text: JSON.stringify(v).slice(0, 60) + "…", mono: true };
       return { kind: "text", text: String(v), mono: f.key.endsWith("_id") || f.key === "icon" || f.key === "source" };
     }),
@@ -44,12 +46,12 @@ export default async function AdminTablePage({ params }: { params: Promise<{ loc
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold">{tx(spec.label, locale)}</h1>
+          <h1 className="text-2xl font-extrabold">{A.label()}</h1>
           <p className="text-sm text-muted">{t("rows", { count: formatNumber(rows.length, locale) })}</p>
         </div>
-        {spec.canCreate && <Button asChild><Link href={`/admin/${table}/new`}><Plus className="size-4" />{t("newRecord", { name: tx(spec.singular, locale) })}</Link></Button>}
+        {spec.canCreate && <Button asChild><Link href={`/admin/${table}/new`}><Plus className="size-4" />{t("newRecord", { name: A.singular() })}</Link></Button>}
       </div>
-      <RecordList table={table} columns={cols.map((c) => tx(c.label, locale))} items={items} />
+      <RecordList table={table} columns={cols.map(A.field)} items={items} />
     </div>
   );
 }

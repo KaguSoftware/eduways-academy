@@ -34,7 +34,7 @@ export default async function ServicePage({ params }: { params: Promise<{ locale
   const [s, all] = await Promise.all([repo.getService(slug), repo.listServices()]);
   if (!s) notFound();
   const title = tx(s.title, loc);
-  const wa = whatsappLink(loc === "fa" ? `سلام ادیوویز! درباره «${title}» سوال دارم.` : `Hello Eduways! I have a question about "${title}".`);
+  const wa = whatsappLink(t("services.waMessage", { title }));
 
   return (
     <>

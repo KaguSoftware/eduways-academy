@@ -26,7 +26,9 @@
     "language": "زبان",
     "explore": "کاوش",
     "company": "ادیوویز",
-    "tools": "ابزارها"
+    "tools": "ابزارها",
+    "primary": "منوی اصلی",
+    "mobile": "منوی موبایل"
   },
   "common": {
     "readMore": "ادامه مطلب",
@@ -87,7 +89,23 @@
     "programsCount": "{count} رشته",
     "universitiesCount": "{count} دانشگاه",
     "min": "حداقل",
-    "max": "حداکثر"
+    "max": "حداکثر",
+    "listSeparator": "، ",
+    "money": "{value} دلار",
+    "moneyRange": "{min}–{max} دلار",
+    "close": "بستن",
+    "decrease": "کاهش",
+    "increase": "افزایش",
+    "removeFilter": "حذف فیلتر",
+    "remove": "حذف",
+    "breadcrumb": "مسیر صفحه",
+    "enShort": "EN",
+    "trShort": "TR",
+    "lang": {
+      "fa": "فارسی",
+      "en": "English"
+    },
+    "percent": "٪"
   },
   "home": {
     "heroEyebrow": "استانبول · ترکیه · بیش از ۶۰ دانشگاه طرف قرارداد",
@@ -207,7 +225,8 @@
     "anyTuition": "بدون محدودیت شهریه",
     "filterCampus": "امکانات",
     "showResults": "نمایش {count, plural, one {# نتیجه} other {# نتیجه}}",
-    "filterTuitionShort": "شهریه"
+    "filterTuitionShort": "شهریه",
+    "waMessage": "سلام ادیوویز! درباره پذیرش در {name} سوال دارم."
   },
   "programs": {
     "title": "رشته‌ها",
@@ -246,7 +265,8 @@
     "colScore": "ادیوویز",
     "colValue": "ارزش",
     "colPrograms": "رشته‌ها",
-    "viewFull": "مشاهده کامل رتبه‌بندی"
+    "viewFull": "مشاهده کامل رتبه‌بندی",
+    "colWorld": "رتبه جهانی"
   },
   "districts": {
     "title": "مناطق استانبول برای دانشجو",
@@ -265,7 +285,8 @@
     "howItWorks": "مراحل کار",
     "pricing": "هزینه",
     "cta": "درباره این خدمت بپرسید",
-    "included": "شامل چه مواردی است"
+    "included": "شامل چه مواردی است",
+    "waMessage": "سلام ادیوویز! درباره «{title}» سوال دارم."
   },
   "calculator": {
     "title": "هزینه تحصیل در استانبول",
@@ -361,7 +382,9 @@
       "US": "آمریکا",
       "AE": "امارات",
       "OTHER": "سایر"
-    }
+    },
+    "prefillUniversity": "دانشگاه مورد نظر: {name}",
+    "phonePlaceholder": "+98 912 000 0000"
   },
   "faq": {
     "title": "سوالات متداول",
@@ -463,7 +486,6 @@
     "country": "کشور",
     "name": "نام",
     "phone": "شماره",
-    "help": "راهنما",
     "idHint": "شناسه یکتا — حروف کوچک انگلیسی، عدد و خط تیره. بعداً قابل تغییر نیست.",
     "welcome": "خوش آمدید",
     "overview": "نمای کلی",
@@ -482,6 +504,198 @@
     "moveDown": "انتقال به پایین",
     "stepTitle": "عنوان مرحله",
     "stepBody": "توضیح مرحله",
-    "noSteps": "هنوز مرحله‌ای اضافه نشده است."
+    "noSteps": "هنوز مرحله‌ای اضافه نشده است.",
+    "markdownHint": "Markdown",
+    "invalidJson": "JSON نامعتبر است",
+    "loginTitle": "ورود مدیریت",
+    "dataSourceDb": "Supabase",
+    "dataSourceSeed": "داده نمونه",
+    "prevPage": "صفحه قبل",
+    "nextPage": "صفحه بعد",
+    "errFk": "رکورد ارجاع‌شده وجود ندارد؛ یکی از موارد موجود در فهرست را انتخاب کنید.",
+    "errDuplicate": "رکوردی با این شناسه یا اسلاگ از قبل وجود دارد.",
+    "errUnauthorized": "دسترسی ندارید.",
+    "errNoDb": "پایگاه داده متصل نیست.",
+    "errNoServiceRole": "کلید سرویس سوپابیس تنظیم نشده است.",
+    "errUnknownTable": "این جدول شناخته نمی‌شود.",
+    "errDb": "ذخیره ناموفق بود.",
+    "tables": {
+      "universities": {
+        "label": "دانشگاه‌ها",
+        "singular": "دانشگاه"
+      },
+      "programs": {
+        "label": "رشته‌ها",
+        "singular": "رشته"
+      },
+      "scholarships": {
+        "label": "بورسیه‌ها و تخفیف‌ها",
+        "singular": "بورسیه"
+      },
+      "rankings": {
+        "label": "رتبه‌بندی‌ها",
+        "singular": "رتبه"
+      },
+      "districts": {
+        "label": "مناطق",
+        "singular": "منطقه"
+      },
+      "services": {
+        "label": "خدمات",
+        "singular": "خدمت"
+      },
+      "stories": {
+        "label": "داستان‌های موفقیت",
+        "singular": "داستان"
+      },
+      "posts": {
+        "label": "مقالات و راهنماها",
+        "singular": "مقاله"
+      },
+      "faqs": {
+        "label": "سوالات متداول",
+        "singular": "سوال"
+      },
+      "site_settings": {
+        "label": "تنظیمات سایت",
+        "singular": "تنظیم"
+      }
+    },
+    "sections": {
+      "basic": "اطلاعات پایه",
+      "content": "محتوا",
+      "numbers": "اعداد و ارقام",
+      "meta": "سایر"
+    },
+    "fields": {
+      "id": "شناسه",
+      "slug": "اسلاگ",
+      "name": "نام",
+      "title": "عنوان",
+      "short_name": "نام کوتاه",
+      "type": "نوع",
+      "district_id": "منطقه",
+      "status": "وضعیت",
+      "is_featured": "منتخب",
+      "description": "معرفی",
+      "highlights": "نکات برجسته",
+      "website": "وب‌سایت",
+      "logo_url": "آدرس لوگو",
+      "cover_url": "آدرس تصویر کاور",
+      "languages": "زبان‌های تدریس",
+      "avg_tuition_min": "حداقل شهریه (دلار)",
+      "avg_tuition_max": "حداکثر شهریه (دلار)",
+      "eduways_discount_pct": "درصد تخفیف ادیوویز",
+      "founded": "سال تأسیس",
+      "student_count": "تعداد دانشجو",
+      "intl_student_pct": "درصد دانشجوی بین‌المللی",
+      "has_dorm": "خوابگاه دارد",
+      "lat": "عرض جغرافیایی",
+      "lng": "طول جغرافیایی",
+      "university_id": "دانشگاه",
+      "level": "مقطع",
+      "language": "زبان",
+      "category_id": "حوزه",
+      "faculty": "دانشکده",
+      "tuition_note": "توضیح شهریه",
+      "duration_years": "مدت (سال)",
+      "tuition_usd": "شهریه سالانه (دلار)",
+      "discount_pct": "درصد تخفیف",
+      "valid_until": "اعتبار تا",
+      "conditions": "شرایط",
+      "source": "منبع",
+      "year": "سال",
+      "rank_national": "رتبه ملی",
+      "rank_world": "رتبه جهانی",
+      "source_url": "لینک منبع",
+      "side": "سمت",
+      "avg_rent_usd": "میانگین اجاره (دلار/ماه)",
+      "icon": "نام آیکون (Lucide)",
+      "order": "ترتیب",
+      "summary": "خلاصه",
+      "body": "متن",
+      "price_note": "توضیح هزینه",
+      "steps": "مراحل",
+      "student_name": "نام دانشجو",
+      "country": "کد کشور",
+      "program": "رشته",
+      "quote": "نقل‌قول",
+      "photo_url": "آدرس عکس",
+      "year_enrolled": "سال ورود",
+      "published_at": "تاریخ انتشار",
+      "tags": "برچسب‌ها",
+      "excerpt": "خلاصه",
+      "author": "نویسنده",
+      "reading_minutes": "زمان مطالعه (دقیقه)",
+      "category": "دسته",
+      "question": "سوال",
+      "answer": "پاسخ",
+      "key": "کلید",
+      "value": "مقدار (JSON)"
+    },
+    "tableFields": {
+      "universities": {
+        "slug": "اسلاگ (آدرس)"
+      },
+      "programs": {
+        "name": "نام رشته"
+      },
+      "districts": {
+        "description": "توضیحات"
+      },
+      "scholarships": {
+        "university_id": "دانشگاه (خالی = عمومی)"
+      },
+      "posts": {
+        "body": "متن (Markdown)"
+      }
+    },
+    "fieldHelp": {
+      "district_id": "از میان مناطق ثبت‌شده انتخاب کنید",
+      "highlights": "هر نکته در یک خط",
+      "languages": "فقط با کاما جدا کنید: tr, en",
+      "icon": "مثلاً GraduationCap",
+      "steps": "مراحل انجام خدمت را یکی‌یکی اضافه کنید",
+      "country": "IR, AF, TJ…",
+      "tags": "با کاما جدا کنید"
+    },
+    "tableFieldHelp": {
+      "universities": {
+        "id": "مثلاً uni-koc-university"
+      }
+    },
+    "options": {
+      "status": {
+        "published": "منتشرشده",
+        "draft": "پیش‌نویس"
+      },
+      "type": {
+        "university": "دانشگاه",
+        "eduways": "ادیوویز",
+        "government": "دولتی"
+      },
+      "category": {
+        "general": "عمومی",
+        "admission": "پذیرش",
+        "costs": "هزینه و بورسیه",
+        "visa": "ویزا و اقامت",
+        "life": "زندگی در استانبول"
+      },
+      "source": {
+        "urap": "URAP",
+        "the": "THE",
+        "qs": "QS",
+        "eduways": "Eduways"
+      }
+    }
+  },
+  "legal": {
+    "privacy": {
+      "p1": "اطلاعاتی که در فرم مشاوره وارد می‌کنید (نام، شماره تماس، ایمیل، کشور، رشته و بودجه) فقط برای تماس با شما درباره تحصیل در ترکیه استفاده می‌شود و با هیچ شخص ثالثی به اشتراک گذاشته نمی‌شود.",
+      "p2": "می‌توانید هر زمان با پیام به واتساپ یا ایمیل ما درخواست حذف اطلاعات خود را بدهید."
+    },
+    "terms": {
+      "p1": "اطلاعات دانشگاه‌ها، شهریه‌ها و رتبه‌ها در این سایت جنبه اطلاع‌رسانی دارد و ممکن است تغییر کند. شهریه و شرایط نهایی هنگام ثبت درخواست توسط دانشگاه تأیید می‌شود. خدمات ادیوویز بر اساس قرارداد کتبی ارائه می‌شود."
+    }
   }
 }

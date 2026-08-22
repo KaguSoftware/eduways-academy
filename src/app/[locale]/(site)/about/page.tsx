@@ -24,7 +24,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
     [s.stats.students_placed, "+", t("home.statsStudents")],
     [s.stats.partner_universities, "+", t("home.statsUniversities")],
     [s.stats.years_active, "", t("home.statsYears")],
-    [s.stats.satisfaction_pct, "٪", t("home.statsSatisfaction")],
+    [s.stats.satisfaction_pct, t("common.percent"), t("home.statsSatisfaction")],
   ] as const;
   return (
     <>

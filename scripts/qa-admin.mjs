@@ -26,6 +26,9 @@ for (const r of routes) {
   const name = r.replace(/[^a-z0-9]+/gi, "_");
   await page.screenshot({ path: `${out}/admin${name}.png`, fullPage: true });
   const title = await page.title();
+  // An unresolved catalogue key renders as its own path — see pick() in src/lib/admin/labels.ts.
+  const leak = await page.locator("text=/(admin|common)\.(fields|tableFields|options|fieldHelp|tableFieldHelp|tables|sections)\./").count();
+  if (leak) issues.push(`[i18n ${r}] ${leak} unresolved message key(s) visible`);
   console.log(`${res?.status() ?? "?"} ${Date.now() - t0}ms ${r} · ${title}`);
   if (r === "/admin/universities/uni-koc-university") {
     const h1 = await page.textContent("h1");

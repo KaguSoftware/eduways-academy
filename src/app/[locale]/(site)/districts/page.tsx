@@ -3,7 +3,8 @@ import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { MapPin, Wallet } from "lucide-react";
 import { getRepo } from "@/lib/repo";
-import { cn, formatNumber, formatUSD, tx } from "@/lib/utils";
+import { cn, formatNumber, tx } from "@/lib/utils";
+import { createMoney } from "@/lib/money";
 import { PageHeader, CtaBanner } from "@/components/layout/page";
 import { Map } from "@/components/map/map";
 import { Badge } from "@/components/ui/primitives";
@@ -22,6 +23,7 @@ export default async function DistrictsPage({ params }: { params: Promise<{ loca
   setRequestLocale(locale);
   const t = await getTranslations();
   const loc = await getLocale();
+  const money = createMoney(t, loc);
   const repo = await getRepo();
   const [districts, universities] = await Promise.all([repo.listDistricts(), repo.listUniversities()]);
   const counts = universities.reduce<Record<string, number>>((a, u) => ((a[u.district_id] = (a[u.district_id] ?? 0) + 1), a), {});
@@ -52,7 +54,7 @@ export default async function DistrictsPage({ params }: { params: Promise<{ loca
                   <p className="mt-2 line-clamp-3 flex-1 text-sm leading-6 text-muted">{tx(d.description, loc)}</p>
                   <div className="mt-4 flex items-center justify-between text-xs">
                     <span className="inline-flex items-center gap-1 text-muted"><MapPin className="size-3.5" />{t("common.universitiesCount", { count: counts[d.id] ?? 0 })}</span>
-                    <span className={cn("inline-flex items-center gap-1 font-bold tabular", d.avg_rent_usd <= 260 ? "text-success" : d.avg_rent_usd >= 420 ? "text-warning" : "text-brand-800")}><Wallet className="size-3.5" />{formatUSD(d.avg_rent_usd, loc)}{t("districts.perMonth")}</span>
+                    <span className={cn("inline-flex items-center gap-1 font-bold tabular", d.avg_rent_usd <= 260 ? "text-success" : d.avg_rent_usd >= 420 ? "text-warning" : "text-brand-800")}><Wallet className="size-3.5" />{money.usd(d.avg_rent_usd)}{t("districts.perMonth")}</span>
                   </div>
                 </Link>
               </Reveal>

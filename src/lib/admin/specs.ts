@@ -1,8 +1,10 @@
 /**
  * Admin table specs: which tables are editable and how each field renders.
- * Labels are bilingual {fa,en}; field types map to branded controls in components/admin/record-form.tsx.
+ *
+ * Structure only — no copy. Labels, hints, option labels and section headings all resolve from
+ * `src/messages/{fa,en}.json` through `adminText()` in ./labels.ts, keyed by table + column name.
+ * Field types map to branded controls in components/admin/record-form.tsx.
  */
-import type { I18nText } from "@/lib/utils";
 
 export type FieldType = "text" | "i18n" | "i18n-long" | "i18n-md" | "i18n-list" | "number" | "boolean" | "select" | "ref" | "date" | "tags" | "steps" | "json";
 
@@ -11,24 +13,28 @@ export type RefSource = "districts" | "universities" | "categories";
 
 export interface RefOption { value: string; label: string }
 
+export const SECTIONS = ["basic", "content", "numbers", "meta"] as const;
+export type SectionKey = (typeof SECTIONS)[number];
+
 export interface FieldSpec {
   key: string;
-  label: I18nText;
   type: FieldType;
-  options?: { value: string; label: I18nText }[];
+  /** Message-key suffix, when the column name is not the label identity. Defaults to `key`. */
+  labelKey?: string;
+  /** Option *values*; their labels come from `admin.options.<field>.<value>` or `common.<value>`. */
+  options?: string[];
+  /** A hint for this field exists in the catalogue (`admin.fieldHelp.*` / `admin.tableFieldHelp.*`). */
+  help?: boolean;
   ref?: RefSource; // for type "ref": which table to pick an existing row from
   wordsOnly?: boolean; // for type "tags": only letters, digits, spaces and the "," separator can be typed
   required?: boolean;
   readOnly?: boolean;
-  help?: I18nText;
-  section?: "basic" | "content" | "numbers" | "meta";
+  section?: SectionKey;
   placeholder?: string;
 }
 
 export interface TableSpec {
   table: string;
-  label: I18nText;
-  singular: I18nText;
   idField: string;
   titleField: string;
   listFields: string[]; // keys from fields
@@ -39,176 +45,168 @@ export interface TableSpec {
   idPrefix?: string; // e.g. "uni-" — used to suggest ids on create
 }
 
-const L = (fa: string, en: string): I18nText => ({ fa, en });
-const f = (key: string, fa: string, en: string, type: FieldType, extra: Partial<FieldSpec> = {}): FieldSpec => ({ key, label: L(fa, en), type, ...extra });
-const STATUS = [{ value: "published", label: L("منتشرشده", "Published") }, { value: "draft", label: L("پیش‌نویس", "Draft") }];
-const LEVELS = [{ value: "associate", label: L("کاردانی", "Associate") }, { value: "bachelor", label: L("کارشناسی", "Bachelor") }, { value: "master", label: L("کارشناسی ارشد", "Master") }, { value: "phd", label: L("دکتری", "PhD") }];
-const LANGS = [{ value: "tr", label: L("ترکی", "Turkish") }, { value: "en", label: L("انگلیسی", "English") }, { value: "tr-en", label: L("ترکی و انگلیسی", "Turkish & English") }];
+const f = (key: string, type: FieldType, extra: Partial<FieldSpec> = {}): FieldSpec => ({ key, type, ...extra });
+const STATUS = ["published", "draft"];
+const LEVELS = ["associate", "bachelor", "master", "phd"];
+const LANGS = ["tr", "en", "tr-en"];
 
 export const TABLES: Record<string, TableSpec> = {
   universities: {
-    table: "universities", label: L("دانشگاه‌ها", "Universities"), singular: L("دانشگاه", "University"), idField: "id", titleField: "name", idPrefix: "uni-",
+    table: "universities", idField: "id", titleField: "name", idPrefix: "uni-",
     listFields: ["type", "avg_tuition_min", "avg_tuition_max", "is_featured", "status"], orderBy: "editorial_score", canCreate: true,
     fields: [
-      f("id", "شناسه", "ID", "text", { required: true, help: L("مثلاً uni-koc-university", "e.g. uni-koc-university"), section: "basic" }),
-      f("slug", "اسلاگ (آدرس)", "Slug", "text", { required: true, section: "basic" }),
-      f("name", "نام", "Name", "i18n", { required: true, section: "basic" }),
-      f("short_name", "نام کوتاه", "Short name", "text", { section: "basic" }),
-      f("type", "نوع", "Type", "select", { options: [{ value: "public", label: L("دولتی", "Public") }, { value: "foundation", label: L("خصوصی", "Private (foundation)") }], required: true, section: "basic" }),
-      f("district_id", "منطقه", "District", "ref", { ref: "districts", help: L("از میان مناطق ثبت‌شده انتخاب کنید", "pick an existing district"), section: "basic" }),
-      f("status", "وضعیت", "Status", "select", { options: STATUS, section: "basic" }),
-      f("is_featured", "منتخب", "Featured", "boolean", { section: "basic" }),
-      f("description", "معرفی", "Description", "i18n-long", { section: "content" }),
-      f("highlights", "نکات برجسته", "Highlights", "i18n-list", { help: L("هر نکته در یک خط", "One highlight per line"), section: "content" }),
-      f("website", "وب‌سایت", "Website", "text", { section: "content" }),
-      f("logo_url", "آدرس لوگو", "Logo URL", "text", { section: "content" }),
-      f("cover_url", "آدرس تصویر کاور", "Cover URL", "text", { section: "content" }),
-      f("languages", "زبان‌های تدریس", "Languages", "tags", { wordsOnly: true, help: L("فقط با کاما جدا کنید: tr, en", "separate with commas only: tr, en"), section: "numbers" }),
-      f("avg_tuition_min", "حداقل شهریه (دلار)", "Tuition min (USD)", "number", { section: "numbers" }),
-      f("avg_tuition_max", "حداکثر شهریه (دلار)", "Tuition max (USD)", "number", { section: "numbers" }),
-      f("eduways_discount_pct", "درصد تخفیف ادیوویز", "Eduways discount %", "number", { section: "numbers" }),
-      f("founded", "سال تأسیس", "Founded", "number", { section: "numbers" }),
-      f("student_count", "تعداد دانشجو", "Students", "number", { section: "numbers" }),
-      f("intl_student_pct", "درصد دانشجوی بین‌المللی", "International %", "number", { section: "numbers" }),
-      f("has_dorm", "خوابگاه دارد", "Has dorm", "boolean", { section: "numbers" }),
-      f("lat", "عرض جغرافیایی", "Latitude", "number", { section: "meta" }),
-      f("lng", "طول جغرافیایی", "Longitude", "number", { section: "meta" }),
+      f("id", "text", { required: true, help: true, section: "basic" }),
+      f("slug", "text", { required: true, section: "basic" }),
+      f("name", "i18n", { required: true, section: "basic" }),
+      f("short_name", "text", { section: "basic" }),
+      f("type", "select", { options: ["public", "foundation"], required: true, section: "basic" }),
+      f("district_id", "ref", { ref: "districts", help: true, section: "basic" }),
+      f("status", "select", { options: STATUS, section: "basic" }),
+      f("is_featured", "boolean", { section: "basic" }),
+      f("description", "i18n-long", { section: "content" }),
+      f("highlights", "i18n-list", { help: true, section: "content" }),
+      f("website", "text", { section: "content" }),
+      f("logo_url", "text", { section: "content" }),
+      f("cover_url", "text", { section: "content" }),
+      f("languages", "tags", { wordsOnly: true, help: true, section: "numbers" }),
+      f("avg_tuition_min", "number", { section: "numbers" }),
+      f("avg_tuition_max", "number", { section: "numbers" }),
+      f("eduways_discount_pct", "number", { section: "numbers" }),
+      f("founded", "number", { section: "numbers" }),
+      f("student_count", "number", { section: "numbers" }),
+      f("intl_student_pct", "number", { section: "numbers" }),
+      f("has_dorm", "boolean", { section: "numbers" }),
+      f("lat", "number", { section: "meta" }),
+      f("lng", "number", { section: "meta" }),
     ],
   },
   programs: {
-    table: "programs", label: L("رشته‌ها", "Programs"), singular: L("رشته", "Program"), idField: "id", titleField: "name", idPrefix: "prog-",
+    table: "programs", idField: "id", titleField: "name", idPrefix: "prog-",
     listFields: ["university_id", "level", "language", "tuition_usd"], orderBy: "university_id", orderAsc: true, canCreate: true,
     fields: [
-      f("id", "شناسه", "ID", "text", { required: true, section: "basic" }),
-      f("university_id", "دانشگاه", "University", "ref", { ref: "universities", required: true, section: "basic" }),
-      f("slug", "اسلاگ", "Slug", "text", { required: true, section: "basic" }),
-      f("name", "نام رشته", "Name", "i18n", { required: true, section: "basic" }),
-      f("level", "مقطع", "Level", "select", { options: LEVELS, section: "basic" }),
-      f("language", "زبان", "Language", "select", { options: LANGS, section: "basic" }),
-      f("category_id", "حوزه", "Category", "ref", { ref: "categories", section: "basic" }),
-      f("faculty", "دانشکده", "Faculty", "i18n", { section: "content" }),
-      f("tuition_note", "توضیح شهریه", "Tuition note", "i18n", { section: "content" }),
-      f("duration_years", "مدت (سال)", "Duration (years)", "number", { section: "numbers" }),
-      f("tuition_usd", "شهریه سالانه (دلار)", "Tuition (USD)", "number", { section: "numbers" }),
+      f("id", "text", { required: true, section: "basic" }),
+      f("university_id", "ref", { ref: "universities", required: true, section: "basic" }),
+      f("slug", "text", { required: true, section: "basic" }),
+      f("name", "i18n", { required: true, section: "basic" }),
+      f("level", "select", { options: LEVELS, section: "basic" }),
+      f("language", "select", { options: LANGS, section: "basic" }),
+      f("category_id", "ref", { ref: "categories", section: "basic" }),
+      f("faculty", "i18n", { section: "content" }),
+      f("tuition_note", "i18n", { section: "content" }),
+      f("duration_years", "number", { section: "numbers" }),
+      f("tuition_usd", "number", { section: "numbers" }),
     ],
   },
   scholarships: {
-    table: "scholarships", label: L("بورسیه‌ها و تخفیف‌ها", "Scholarships"), singular: L("بورسیه", "Scholarship"), idField: "id", titleField: "title", idPrefix: "sch-",
+    table: "scholarships", idField: "id", titleField: "title", idPrefix: "sch-",
     listFields: ["university_id", "discount_pct", "type", "valid_until"], canCreate: true,
     fields: [
-      f("id", "شناسه", "ID", "text", { required: true, section: "basic" }),
-      f("university_id", "دانشگاه (خالی = عمومی)", "University (empty = global)", "ref", { ref: "universities", section: "basic" }),
-      f("title", "عنوان", "Title", "i18n", { required: true, section: "basic" }),
-      f("type", "نوع", "Type", "select", { options: [{ value: "university", label: L("دانشگاه", "University") }, { value: "eduways", label: L("ادیوویز", "Eduways") }, { value: "government", label: L("دولتی", "Government") }], section: "basic" }),
-      f("discount_pct", "درصد تخفیف", "Discount %", "number", { section: "numbers" }),
-      f("valid_until", "اعتبار تا", "Valid until", "date", { section: "numbers" }),
-      f("conditions", "شرایط", "Conditions", "i18n-long", { section: "content" }),
+      f("id", "text", { required: true, section: "basic" }),
+      f("university_id", "ref", { ref: "universities", section: "basic" }),
+      f("title", "i18n", { required: true, section: "basic" }),
+      f("type", "select", { options: ["university", "eduways", "government"], section: "basic" }),
+      f("discount_pct", "number", { section: "numbers" }),
+      f("valid_until", "date", { section: "numbers" }),
+      f("conditions", "i18n-long", { section: "content" }),
     ],
   },
   rankings: {
-    table: "rankings", label: L("رتبه‌بندی‌ها", "Rankings"), singular: L("رتبه", "Ranking"), idField: "id", titleField: "university_id", idPrefix: "rk-",
+    table: "rankings", idField: "id", titleField: "university_id", idPrefix: "rk-",
     listFields: ["source", "year", "rank_national", "rank_world"], canCreate: true,
     fields: [
-      f("id", "شناسه", "ID", "text", { required: true, section: "basic" }),
-      f("university_id", "دانشگاه", "University", "ref", { ref: "universities", required: true, section: "basic" }),
-      f("source", "منبع", "Source", "select", { options: ["urap", "the", "qs", "eduways"].map((v) => ({ value: v, label: L(v.toUpperCase(), v.toUpperCase()) })), section: "basic" }),
-      f("year", "سال", "Year", "number", { section: "numbers" }),
-      f("rank_national", "رتبه ملی", "National rank", "number", { section: "numbers" }),
-      f("rank_world", "رتبه جهانی", "World rank", "number", { section: "numbers" }),
-      f("source_url", "لینک منبع", "Source URL", "text", { section: "content" }),
+      f("id", "text", { required: true, section: "basic" }),
+      f("university_id", "ref", { ref: "universities", required: true, section: "basic" }),
+      f("source", "select", { options: ["urap", "the", "qs", "eduways"], section: "basic" }),
+      f("year", "number", { section: "numbers" }),
+      f("rank_national", "number", { section: "numbers" }),
+      f("rank_world", "number", { section: "numbers" }),
+      f("source_url", "text", { section: "content" }),
     ],
   },
   districts: {
-    table: "districts", label: L("مناطق", "Districts"), singular: L("منطقه", "District"), idField: "id", titleField: "name", idPrefix: "dist-",
+    table: "districts", idField: "id", titleField: "name", idPrefix: "dist-",
     listFields: ["side", "avg_rent_usd"], canCreate: true,
     fields: [
-      f("id", "شناسه", "ID", "text", { required: true, section: "basic" }),
-      f("slug", "اسلاگ", "Slug", "text", { required: true, section: "basic" }),
-      f("name", "نام", "Name", "i18n", { required: true, section: "basic" }),
-      f("side", "سمت", "Side", "select", { options: [{ value: "european", label: L("اروپایی", "European") }, { value: "asian", label: L("آسیایی", "Asian") }], section: "basic" }),
-      f("description", "توضیحات", "Description", "i18n-long", { section: "content" }),
-      f("highlights", "نکات برجسته", "Highlights", "i18n-list", { help: L("هر نکته در یک خط", "One highlight per line"), section: "content" }),
-      f("avg_rent_usd", "میانگین اجاره (دلار/ماه)", "Avg rent (USD/month)", "number", { section: "numbers" }),
-      f("lat", "عرض جغرافیایی", "Latitude", "number", { section: "meta" }),
-      f("lng", "طول جغرافیایی", "Longitude", "number", { section: "meta" }),
+      f("id", "text", { required: true, section: "basic" }),
+      f("slug", "text", { required: true, section: "basic" }),
+      f("name", "i18n", { required: true, section: "basic" }),
+      f("side", "select", { options: ["european", "asian"], section: "basic" }),
+      f("description", "i18n-long", { section: "content" }),
+      f("highlights", "i18n-list", { help: true, section: "content" }),
+      f("avg_rent_usd", "number", { section: "numbers" }),
+      f("lat", "number", { section: "meta" }),
+      f("lng", "number", { section: "meta" }),
     ],
   },
   services: {
-    table: "services", label: L("خدمات", "Services"), singular: L("خدمت", "Service"), idField: "id", titleField: "title", idPrefix: "svc-",
+    table: "services", idField: "id", titleField: "title", idPrefix: "svc-",
     listFields: ["icon", "order"], orderBy: "order", orderAsc: true, canCreate: true,
     fields: [
-      f("id", "شناسه", "ID", "text", { required: true, section: "basic" }),
-      f("slug", "اسلاگ", "Slug", "text", { required: true, section: "basic" }),
-      f("title", "عنوان", "Title", "i18n", { required: true, section: "basic" }),
-      f("icon", "نام آیکون (Lucide)", "Lucide icon name", "text", { section: "basic", help: L("مثلاً GraduationCap", "e.g. GraduationCap") }),
-      f("order", "ترتیب", "Order", "number", { section: "basic" }),
-      f("summary", "خلاصه", "Summary", "i18n-long", { section: "content" }),
-      f("body", "متن", "Body", "i18n-long", { section: "content" }),
-      f("price_note", "توضیح هزینه", "Price note", "i18n", { section: "content" }),
-      f("steps", "مراحل", "Steps", "steps", { help: L("مراحل انجام خدمت را یکی‌یکی اضافه کنید", "Add the steps of this service one by one"), section: "content" }),
+      f("id", "text", { required: true, section: "basic" }),
+      f("slug", "text", { required: true, section: "basic" }),
+      f("title", "i18n", { required: true, section: "basic" }),
+      f("icon", "text", { section: "basic", help: true }),
+      f("order", "number", { section: "basic" }),
+      f("summary", "i18n-long", { section: "content" }),
+      f("body", "i18n-long", { section: "content" }),
+      f("price_note", "i18n", { section: "content" }),
+      f("steps", "steps", { help: true, section: "content" }),
     ],
   },
   stories: {
-    table: "stories", label: L("داستان‌های موفقیت", "Stories"), singular: L("داستان", "Story"), idField: "id", titleField: "student_name", idPrefix: "story-",
+    table: "stories", idField: "id", titleField: "student_name", idPrefix: "story-",
     listFields: ["university_id", "year_enrolled", "published_at", "status"], orderBy: "published_at", canCreate: true,
     fields: [
-      f("id", "شناسه", "ID", "text", { required: true, section: "basic" }),
-      f("slug", "اسلاگ", "Slug", "text", { required: true, section: "basic" }),
-      f("student_name", "نام دانشجو", "Student name", "text", { required: true, section: "basic" }),
-      f("university_id", "دانشگاه", "University", "ref", { ref: "universities", section: "basic" }),
-      f("country", "کد کشور", "Country code", "text", { section: "basic", help: L("IR, AF, TJ…", "IR, AF, TJ…") }),
-      f("status", "وضعیت", "Status", "select", { options: STATUS, section: "basic" }),
-      f("program", "رشته", "Program", "i18n", { section: "content" }),
-      f("quote", "نقل‌قول", "Quote", "i18n-long", { section: "content" }),
-      f("body", "متن", "Body", "i18n-md", { section: "content" }),
-      f("photo_url", "آدرس عکس", "Photo URL", "text", { section: "content" }),
-      f("year_enrolled", "سال ورود", "Year enrolled", "number", { section: "numbers" }),
-      f("published_at", "تاریخ انتشار", "Published at", "date", { section: "numbers" }),
+      f("id", "text", { required: true, section: "basic" }),
+      f("slug", "text", { required: true, section: "basic" }),
+      f("student_name", "text", { required: true, section: "basic" }),
+      f("university_id", "ref", { ref: "universities", section: "basic" }),
+      f("country", "text", { section: "basic", help: true }),
+      f("status", "select", { options: STATUS, section: "basic" }),
+      f("program", "i18n", { section: "content" }),
+      f("quote", "i18n-long", { section: "content" }),
+      f("body", "i18n-md", { section: "content" }),
+      f("photo_url", "text", { section: "content" }),
+      f("year_enrolled", "number", { section: "numbers" }),
+      f("published_at", "date", { section: "numbers" }),
     ],
   },
   posts: {
-    table: "posts", label: L("مقالات و راهنماها", "Posts"), singular: L("مقاله", "Post"), idField: "id", titleField: "title", idPrefix: "post-",
+    table: "posts", idField: "id", titleField: "title", idPrefix: "post-",
     listFields: ["tags", "published_at", "status"], orderBy: "published_at", canCreate: true,
     fields: [
-      f("id", "شناسه", "ID", "text", { required: true, section: "basic" }),
-      f("slug", "اسلاگ", "Slug", "text", { required: true, section: "basic" }),
-      f("title", "عنوان", "Title", "i18n", { required: true, section: "basic" }),
-      f("status", "وضعیت", "Status", "select", { options: STATUS, section: "basic" }),
-      f("tags", "برچسب‌ها", "Tags", "tags", { help: L("با کاما جدا کنید", "comma separated"), section: "basic" }),
-      f("excerpt", "خلاصه", "Excerpt", "i18n-long", { section: "content" }),
-      f("body", "متن (Markdown)", "Body (markdown)", "i18n-md", { section: "content" }),
-      f("cover_url", "آدرس تصویر کاور", "Cover URL", "text", { section: "content" }),
-      f("author", "نویسنده", "Author", "text", { section: "meta" }),
-      f("reading_minutes", "زمان مطالعه (دقیقه)", "Reading minutes", "number", { section: "meta" }),
-      f("published_at", "تاریخ انتشار", "Published at", "date", { section: "meta" }),
+      f("id", "text", { required: true, section: "basic" }),
+      f("slug", "text", { required: true, section: "basic" }),
+      f("title", "i18n", { required: true, section: "basic" }),
+      f("status", "select", { options: STATUS, section: "basic" }),
+      f("tags", "tags", { help: true, section: "basic" }),
+      f("excerpt", "i18n-long", { section: "content" }),
+      f("body", "i18n-md", { section: "content" }),
+      f("cover_url", "text", { section: "content" }),
+      f("author", "text", { section: "meta" }),
+      f("reading_minutes", "number", { section: "meta" }),
+      f("published_at", "date", { section: "meta" }),
     ],
   },
   faqs: {
-    table: "faqs", label: L("سوالات متداول", "FAQs"), singular: L("سوال", "FAQ"), idField: "id", titleField: "question", idPrefix: "faq-",
+    table: "faqs", idField: "id", titleField: "question", idPrefix: "faq-",
     listFields: ["category", "order"], orderBy: "order", orderAsc: true, canCreate: true,
     fields: [
-      f("id", "شناسه", "ID", "text", { required: true, section: "basic" }),
-      f("category", "دسته", "Category", "select", { options: [{ value: "general", label: L("عمومی", "General") }, { value: "admission", label: L("پذیرش", "Admission") }, { value: "costs", label: L("هزینه و بورسیه", "Costs") }, { value: "visa", label: L("ویزا و اقامت", "Visa") }, { value: "life", label: L("زندگی در استانبول", "Life") }], section: "basic" }),
-      f("order", "ترتیب", "Order", "number", { section: "basic" }),
-      f("question", "سوال", "Question", "i18n", { required: true, section: "content" }),
-      f("answer", "پاسخ", "Answer", "i18n-long", { section: "content" }),
+      f("id", "text", { required: true, section: "basic" }),
+      f("category", "select", { options: ["general", "admission", "costs", "visa", "life"], section: "basic" }),
+      f("order", "number", { section: "basic" }),
+      f("question", "i18n", { required: true, section: "content" }),
+      f("answer", "i18n-long", { section: "content" }),
     ],
   },
   site_settings: {
-    table: "site_settings", label: L("تنظیمات سایت", "Settings"), singular: L("تنظیم", "Setting"), idField: "key", titleField: "key",
+    table: "site_settings", idField: "key", titleField: "key",
     listFields: ["value"], canCreate: false,
     fields: [
-      f("key", "کلید", "Key", "text", { readOnly: true, section: "basic" }),
-      f("value", "مقدار (JSON)", "Value (JSON)", "json", { section: "content" }),
+      f("key", "text", { readOnly: true, section: "basic" }),
+      f("value", "json", { section: "content" }),
     ],
   },
 };
 
 export const ADMIN_NAV = ["leads", "universities", "programs", "scholarships", "rankings", "districts", "services", "stories", "posts", "faqs", "site_settings"] as const;
-
-export const SECTION_LABELS: Record<NonNullable<FieldSpec["section"]>, I18nText> = {
-  basic: L("اطلاعات پایه", "Basics"),
-  content: L("محتوا", "Content"),
-  numbers: L("اعداد و ارقام", "Numbers"),
-  meta: L("سایر", "Other"),
-};

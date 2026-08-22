@@ -5,7 +5,7 @@ import { DayPicker } from "react-day-picker";
 import * as jalali from "date-fns-jalali";
 import { faIR } from "date-fns-jalali/locale";
 import { format as fmtGregorian } from "date-fns";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger, inputClass } from "./primitives";
 import { cn, formatDate } from "@/lib/utils";
@@ -33,6 +33,7 @@ export interface DatePickerProps {
 
 export function DatePicker({ value, onChange, placeholder = "—", className, clearable = true, calendar = "auto" }: DatePickerProps) {
   const locale = useLocale();
+  const t = useTranslations("common");
   const useJalali = calendar === "jalali" || (calendar === "auto" && locale === "fa");
   const selected = value ? new Date(value + "T00:00:00") : undefined;
   const [open, setOpen] = React.useState(false);
@@ -43,7 +44,7 @@ export function DatePicker({ value, onChange, placeholder = "—", className, cl
       <PopoverTrigger asChild>
         <button type="button" className={cn(inputClass, "items-center justify-between gap-2 text-start", !label && "text-muted/70", className)}>
           <span className="flex items-center gap-2"><CalendarDays className="size-4 text-muted" />{label || placeholder}</span>
-          {clearable && label && <span role="button" aria-label="clear" onClick={(e) => { e.stopPropagation(); onChange(null); }} className="rounded-full p-0.5 text-muted hover:bg-surface hover:text-foreground"><X className="size-3.5" /></span>}
+          {clearable && label && <span role="button" aria-label={t("clear")} onClick={(e) => { e.stopPropagation(); onChange(null); }} className="rounded-full p-0.5 text-muted hover:bg-surface hover:text-foreground"><X className="size-3.5" /></span>}
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-3" align="start">

@@ -1,7 +1,8 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { UniversityWithRelations, Category } from "@/lib/types";
-import { cn, formatNumber, formatRange, tx } from "@/lib/utils";
+import { cn, formatNumber, tx } from "@/lib/utils";
+import { createMoney } from "@/lib/money";
 import { UniversityLogo, ScoreRing } from "@/components/university/university-card";
 import { Badge } from "@/components/ui/primitives";
 
@@ -36,9 +37,10 @@ export function rankingList(key: RankingKey, all: UniversityWithRelations[], cat
 export async function RankingTable({ list, metricKey }: { list: UniversityWithRelations[]; metricKey: RankingKey }) {
   const t = await getTranslations();
   const locale = await getLocale();
+  const money = createMoney(t, locale);
   const metric = (u: UniversityWithRelations) => {
     if (metricKey === "best-value") return `${formatNumber(u.value_score ?? 0, locale)}/100`;
-    if (metricKey === "cheapest") return formatRange(u.avg_tuition_min, u.avg_tuition_max, locale);
+    if (metricKey === "cheapest") return money.range(u.avg_tuition_min, u.avg_tuition_max);
     if (metricKey === "english-taught") return `${formatNumber(u.programs.filter((p) => p.language !== "tr").length, locale)} EN`;
     return u.best_rank ? `#${formatNumber(u.best_rank, locale)}` : "—";
   };
@@ -68,7 +70,7 @@ export async function RankingTable({ list, metricKey }: { list: UniversityWithRe
               </td>
               <td className="px-4 py-3 text-center font-extrabold tabular text-brand-800">{metric(u)}</td>
               <td className="hidden px-4 py-3 text-center md:table-cell"><Badge variant={u.type === "public" ? "success" : "accent"}>{t(`common.${u.type}`)}</Badge></td>
-              <td className="hidden px-4 py-3 text-center tabular md:table-cell">{formatRange(u.avg_tuition_min, u.avg_tuition_max, locale)}</td>
+              <td className="hidden px-4 py-3 text-center tabular md:table-cell">{money.range(u.avg_tuition_min, u.avg_tuition_max)}</td>
               <td className="hidden px-4 py-3 md:table-cell"><div className="flex justify-center"><ScoreRing value={u.editorial_score} size={36} /></div></td>
               <td className="hidden px-4 py-3 md:table-cell"><div className="flex justify-center"><ScoreRing value={u.value_score ?? 0} size={36} /></div></td>
             </tr>

@@ -40,9 +40,9 @@ export function RecordList({ table, columns, items }: { table: string; columns: 
         <div className="sm:w-80"><SearchInput value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("search")} /></div>
         {pages > 1 && (
           <div className="flex items-center gap-2 text-sm text-muted">
-            <Button variant="outline" size="icon-sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={cur === 1} aria-label="prev"><ChevronRight className="size-4 ltr:rotate-180" /></Button>
+            <Button variant="outline" size="icon-sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={cur === 1} aria-label={t("prevPage")}><ChevronRight className="size-4 ltr:rotate-180" /></Button>
             <span className="tabular">{t("page", { page: formatNumber(cur, locale), pages: formatNumber(pages, locale) })}</span>
-            <Button variant="outline" size="icon-sm" onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={cur === pages} aria-label="next"><ChevronLeft className="size-4 ltr:rotate-180" /></Button>
+            <Button variant="outline" size="icon-sm" onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={cur === pages} aria-label={t("nextPage")}><ChevronLeft className="size-4 ltr:rotate-180" /></Button>
           </div>
         )}
       </div>

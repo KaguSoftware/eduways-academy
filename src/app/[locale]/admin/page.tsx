@@ -6,8 +6,7 @@ import { getRepo } from "@/lib/repo";
 import { formatNumber, formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/button";
-import { TABLES } from "@/lib/admin/specs";
-import { tx } from "@/lib/utils";
+import { adminText } from "@/lib/admin/labels";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +16,7 @@ export default async function AdminHome({ params }: { params: Promise<{ locale: 
   const staff = await requireStaff(locale);
   const t = await getTranslations("admin");
   const tc = await getTranslations("consultation");
+  const tRoot = await getTranslations();
   const repo = await getRepo();
   const [leads, unis, programs, stories, posts, scholarships, faqs] = await Promise.all([repo.listLeads(), repo.listUniversities(), repo.listPrograms(), repo.listStories(), repo.listPosts(), repo.listScholarships(), repo.listFaqs()]);
   const newLeads = leads.filter((l) => l.status === "new").length;
@@ -40,8 +40,8 @@ export default async function AdminHome({ params }: { params: Promise<{ locale: 
           <h1 className="text-2xl font-extrabold">{t("dashboard")}</h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button asChild size="sm" variant="secondary"><Link href="/admin/posts/new"><Plus className="size-4" />{t("newRecord", { name: tx(TABLES.posts.singular, locale) })}</Link></Button>
-          <Button asChild size="sm" variant="secondary"><Link href="/admin/universities/new"><Plus className="size-4" />{t("newRecord", { name: tx(TABLES.universities.singular, locale) })}</Link></Button>
+          <Button asChild size="sm" variant="secondary"><Link href="/admin/posts/new"><Plus className="size-4" />{t("newRecord", { name: adminText(tRoot, "posts").singular() })}</Link></Button>
+          <Button asChild size="sm" variant="secondary"><Link href="/admin/universities/new"><Plus className="size-4" />{t("newRecord", { name: adminText(tRoot, "universities").singular() })}</Link></Button>
         </div>
       </div>
 

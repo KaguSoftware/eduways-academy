@@ -6,7 +6,8 @@ import { useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { SlidersHorizontal, X, ArrowDownAZ, ArrowDownNarrowWide, ArrowUpNarrowWide, Sparkles, Trophy, Layers, MapPin } from "lucide-react";
 import type { UniversityWithRelations, District, Category } from "@/lib/types";
-import { cn, formatUSD, tx } from "@/lib/utils";
+import { cn, tx } from "@/lib/utils";
+import { useMoney } from "@/lib/money";
 import { Button } from "@/components/ui/button";
 import { Select, Segmented, Slider, SearchInput, Badge, Empty, Dialog, DialogContent, DialogTrigger, DialogClose, Checkbox, FilterGroup, FilterPill } from "@/components/ui/primitives";
 import { UniversityCard } from "./university-card";
@@ -54,6 +55,7 @@ function matches(u: UniversityWithRelations, f: Filters, skip: keyof Filters | n
 export function UniversityExplorer({ universities, districts, categories }: { universities: UniversityWithRelations[]; districts: District[]; categories: Category[] }) {
   const t = useTranslations();
   const locale = useLocale();
+  const money = useMoney();
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
@@ -130,15 +132,15 @@ export function UniversityExplorer({ universities, districts, categories }: { un
     if (!isAnyTuition(f.minTuition, f.maxTuition)) {
       const label =
         f.minTuition <= TUITION_MIN
-          ? `${t("common.upTo")} ${formatUSD(f.maxTuition, locale)}`
+          ? `${t("common.upTo")} ${money.usd(f.maxTuition)}`
           : f.maxTuition >= TUITION_MAX
-            ? `${formatUSD(f.minTuition, locale)}+`
-            : `${formatUSD(f.minTuition, locale)} – ${formatUSD(f.maxTuition, locale)}`;
+            ? `${money.usd(f.minTuition)}+`
+            : `${money.usd(f.minTuition)} – ${money.usd(f.maxTuition)}`;
       out.push({ key: "tuition", label, clear: () => setF((prev) => ({ ...prev, minTuition: TUITION_MIN, maxTuition: TUITION_MAX })) });
     }
     if (f.dorm) out.push({ key: "dorm", label: t("common.dorm"), clear: () => set("dorm", false) });
     return out;
-  }, [f, districts, categories, locale, t]);
+  }, [f, districts, categories, locale, t, money]);
 
   const activeCount = pills.length;
 
@@ -235,7 +237,7 @@ export function UniversityExplorer({ universities, districts, categories }: { un
           <span className="text-xs font-bold tabular text-brand-800">
             {isAnyTuition(f.minTuition, f.maxTuition)
               ? t("universities.anyTuition")
-              : `${formatUSD(f.minTuition, locale)} – ${formatUSD(f.maxTuition, locale)}`}
+              : `${money.usd(f.minTuition)} – ${money.usd(f.maxTuition)}`}
           </span>
         }
       >
@@ -250,8 +252,8 @@ export function UniversityExplorer({ universities, districts, categories }: { un
             aria-label={t("universities.filterTuition")}
           />
           <div className="flex items-baseline justify-between gap-2 text-[11px] text-muted">
-            <span className="tabular">{formatUSD(TUITION_MIN, locale)}</span>
-            <span className="tabular">{formatUSD(TUITION_MAX, locale)}+</span>
+            <span className="tabular">{money.usd(TUITION_MIN)}</span>
+            <span className="tabular">{money.usd(TUITION_MAX)}+</span>
           </div>
         </div>
       </FilterGroup>

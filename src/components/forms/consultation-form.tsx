@@ -8,7 +8,8 @@ import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { CheckCircle2, Loader2, MessageCircle, Send, ShieldCheck } from "lucide-react";
 import { leadSchema, type LeadInput } from "@/lib/lead-schema";
-import { formatUSD, toEnglishDigits, whatsappLink } from "@/lib/utils";
+import { toEnglishDigits, whatsappLink } from "@/lib/utils";
+import { useMoney } from "@/lib/money";
 import { Field, Input, Textarea, Select, Segmented, Slider } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/button";
 
@@ -18,13 +19,14 @@ const LEVELS = ["bachelor", "master", "phd", "associate"] as const;
 export function ConsultationForm({ universityName }: { universityName?: string }) {
   const t = useTranslations();
   const locale = useLocale();
+  const money = useMoney();
   const sp = useSearchParams();
   const [done, setDone] = React.useState<{ wa: string; name: string } | null>(null);
   const [serverError, setServerError] = React.useState<string | null>(null);
 
   const form = useForm<LeadInput>({
     resolver: zodResolver(leadSchema),
-    defaultValues: { name: "", phone: "", email: "", country: "IR", interest_level: "bachelor", desired_major: "", budget_usd: 8000, message: universityName ? (locale === "fa" ? `دانشگاه مورد نظر: ${universityName}` : `Preferred university: ${universityName}`) : "", website: "" },
+    defaultValues: { name: "", phone: "", email: "", country: "IR", interest_level: "bachelor", desired_major: "", budget_usd: 8000, message: universityName ? t("consultation.prefillUniversity", { name: universityName }) : "", website: "" },
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
@@ -81,7 +83,7 @@ export function ConsultationForm({ universityName }: { universityName?: string }
             <Field label={t("consultation.major")}>
               <Input {...form.register("desired_major")} placeholder={t("programs.placeholder")} />
             </Field>
-            <Field label={<span className="flex items-center justify-between"><span>{t("consultation.budget")}</span><Controller control={form.control} name="budget_usd" render={({ field }) => <span className="font-bold tabular text-brand-800">{formatUSD(field.value ?? 0, locale)}</span>} /></span>}>
+            <Field label={<span className="flex items-center justify-between"><span>{t("consultation.budget")}</span><Controller control={form.control} name="budget_usd" render={({ field }) => <span className="font-bold tabular text-brand-800">{money.usd(field.value ?? 0)}</span>} /></span>}>
               <Controller control={form.control} name="budget_usd" render={({ field }) => <div className="flex h-11 items-center"><Slider value={[field.value ?? 0]} onValueChange={([v]) => field.onChange(v)} min={1000} max={40000} step={500} /></div>} />
             </Field>
           </div>

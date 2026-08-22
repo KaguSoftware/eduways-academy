@@ -13,7 +13,8 @@ import {
     Info,
 } from "lucide-react";
 import type { UniversityWithRelations } from "@/lib/types";
-import { cn, formatNumber, formatRange, tx } from "@/lib/utils";
+import { cn, formatNumber, tx } from "@/lib/utils";
+import { useMoney } from "@/lib/money";
 import { Tooltip } from "@/components/ui/primitives";
 import { logoAspect, logoPlate, logoShape } from "@/data/seed/university-logos";
 import { useCompare } from "./compare-context";
@@ -172,6 +173,7 @@ export function UniversityCard({
     compact?: boolean;
 }) {
     const locale = useLocale();
+    const money = useMoney();
     const t = useTranslations();
     const { has, toggle } = useCompare();
     const selected = has(u.slug);
@@ -241,7 +243,7 @@ export function UniversityCard({
                                             u.eduways_discount_pct,
                                             locale
                                         )}
-                                        ٪
+                                        {t("common.percent")}
                                     </li>
                                 ) : null}
                             </ul>
@@ -268,11 +270,7 @@ export function UniversityCard({
             <dl className="mt-4 grid grid-cols-2 gap-2 text-center">
                 <Stat
                     label={t("common.tuition")}
-                    value={formatRange(
-                        u.avg_tuition_min,
-                        u.avg_tuition_max,
-                        locale
-                    )}
+                    value={money.range(u.avg_tuition_min, u.avg_tuition_max)}
                     small
                 />
                 <Stat

@@ -4,13 +4,14 @@ import { ArrowLeft, ArrowRight, ChevronLeft, MessageCircle, Sparkles } from "luc
 import { cn, whatsappLink } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-export function PageHeader({ eyebrow, title, subtitle, children, className, crumbs }: { eyebrow?: React.ReactNode; title: React.ReactNode; subtitle?: React.ReactNode; children?: React.ReactNode; className?: string; crumbs?: { label: string; href?: string }[] }) {
+export async function PageHeader({ eyebrow, title, subtitle, children, className, crumbs }: { eyebrow?: React.ReactNode; title: React.ReactNode; subtitle?: React.ReactNode; children?: React.ReactNode; className?: string; crumbs?: { label: string; href?: string }[] }) {
+  const t = await getTranslations("common");
   return (
     <section className={cn("relative overflow-hidden border-b border-border bg-surface", className)}>
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-60 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)]" />
       <div className="container-x relative py-12 md:py-16">
         {crumbs && crumbs.length > 0 && (
-          <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-1 text-xs text-muted">
+          <nav aria-label={t("breadcrumb")} className="mb-4 flex flex-wrap items-center gap-1 text-xs text-muted">
             {crumbs.map((c, i) => (
               <span key={i} className="flex items-center gap-1">
                 {i > 0 && <ChevronLeft className="size-3 rtl:rotate-0 ltr:rotate-180" />}

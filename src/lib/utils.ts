@@ -20,22 +20,6 @@ export function formatNumber(n: number | null | undefined, locale: string, opts?
   return new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en-US", opts).format(n);
 }
 
-export function formatUSD(n: number | null | undefined, locale: string) {
-  if (n === null || n === undefined) return "—";
-  const formatted = formatNumber(n, locale, { maximumFractionDigits: 0 });
-  return locale === "fa" ? `${formatted} دلار` : `$${formatted}`;
-}
-
-export function formatRange(min?: number | null, max?: number | null, locale = "en") {
-  if (min == null && max == null) return "—";
-  if (min != null && max != null && min !== max) {
-    const a = formatNumber(min, locale, { maximumFractionDigits: 0 });
-    const b = formatNumber(max, locale, { maximumFractionDigits: 0 });
-    return locale === "fa" ? `${a}–${b} دلار` : `$${a}–${b}`;
-  }
-  return formatUSD(min ?? max, locale);
-}
-
 export function formatDate(iso: string | Date, locale: string) {
   const d = typeof iso === "string" ? new Date(iso) : iso;
   return new Intl.DateTimeFormat(locale === "fa" ? "fa-IR-u-ca-persian" : "en-US", {

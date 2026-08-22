@@ -32,7 +32,7 @@ export function Hero({ stats }: { stats: SiteSettings["stats"] }) {
   const supportStats = [
     { v: stats.partner_universities, suffix: "+", label: t("home.statsUniversities") },
     { v: stats.years_active, suffix: "", label: t("home.statsYears") },
-    { v: stats.satisfaction_pct, suffix: locale === "fa" ? "٪" : "%", label: t("home.statsSatisfaction") },
+    { v: stats.satisfaction_pct, suffix: t("common.percent"), label: t("home.statsSatisfaction") },
   ];
 
   return (

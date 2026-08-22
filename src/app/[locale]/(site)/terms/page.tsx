@@ -1,20 +1,19 @@
-import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageHeader } from "@/components/layout/page";
 
 export default async function TermsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("footer");
-  const loc = await getLocale();
+  // SCOPE(v1): placeholder terms — replace with lawyer-reviewed text. GROWS LATER → full terms.
+  // Paragraphs are numbered keys in `legal.terms`; adding p3, p4… in messages/*.json is enough.
+  const tp = await getTranslations("legal.terms");
+  const paragraphs = ["p1", "p2", "p3", "p4", "p5"].filter((k) => tp.has(k));
   return (
     <>
       <PageHeader title={t("terms")} />
       <section className="container-x max-w-3xl py-12 text-base leading-8 text-muted">
-        {loc === "fa" ? (
-          <p>اطلاعات دانشگاه‌ها، شهریه‌ها و رتبه‌ها در این سایت جنبه اطلاع‌رسانی دارد و ممکن است تغییر کند. شهریه و شرایط نهایی هنگام ثبت درخواست توسط دانشگاه تأیید می‌شود. خدمات ادیوویز بر اساس قرارداد کتبی ارائه می‌شود.</p>
-        ) : (
-          <p>University, tuition and ranking information on this site is provided for guidance and may change. Final tuition and conditions are confirmed by the university at application time. Eduways services are provided under a written agreement.</p>
-        )}
+        {paragraphs.map((k, i) => <p key={k} className={i ? "mt-4" : undefined}>{tp(k)}</p>)}
       </section>
     </>
   );
