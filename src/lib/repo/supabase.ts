@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { publicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hydrate } from "./compute";
+import { byId } from "@/lib/utils";
 import { applyUniversityFilters, applyProgramFilters } from "./seed";
 import { siteSettings as defaultSettings } from "@/data/seed/content";
 
@@ -101,8 +102,9 @@ export const supabaseRepo: Repo = {
   },
   async listStories() {
     const sb = publicClient();
-    const { data } = await sb.from("stories").select("*, university:universities(*)").order("published_at", { ascending: false });
-    return (data ?? []) as never;
+    // Ordered by id like posts, so the list reads story-1, story-2, … regardless of publish dates.
+    const { data } = await sb.from("stories").select("*, university:universities(*)");
+    return (data ?? []).sort(byId) as never;
   },
   async getStory(slug) {
     const sb = publicClient();
@@ -111,7 +113,7 @@ export const supabaseRepo: Repo = {
   },
   async listPosts() {
     const sb = publicClient();
-    return (await sb.from("posts").select("*").order("published_at", { ascending: false })).data ?? [];
+    return ((await sb.from("posts").select("*")).data ?? []).sort(byId);
   },
   async getPost(slug) {
     const sb = publicClient();

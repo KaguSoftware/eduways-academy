@@ -6,6 +6,7 @@ import { formatDate, tx } from "@/lib/utils";
 import { PageHeader, CtaBanner } from "@/components/layout/page";
 import { Badge } from "@/components/ui/primitives";
 import { Reveal } from "@/components/ui/reveal";
+import { Pager } from "@/components/ui/pager";
 
 export const revalidate = 3600;
 
@@ -22,24 +23,13 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
   const loc = await getLocale();
   const repo = await getRepo();
   const posts = await repo.listPosts();
-  const [first, ...rest] = posts;
   return (
     <>
       <PageHeader title={t("blog.title")} subtitle={t("blog.subtitle")} />
       <section className="container-x py-12">
-        {first && (
-          <Link href={`/blog/${first.slug}`} className="group mb-8 grid gap-6 overflow-hidden rounded-3xl bg-brand-gradient p-8 text-white shadow-lg transition-shadow hover:shadow-xl md:grid-cols-[1.3fr_1fr] md:p-12 focus-ring">
-            <div>
-              <div className="flex gap-1.5">{first.tags.map((tag) => <Badge key={tag} className="bg-white/15 text-white font-en">{tag}</Badge>)}</div>
-              <h2 className="mt-4 text-2xl font-extrabold leading-tight md:text-4xl">{tx(first.title, loc)}</h2>
-              <p className="mt-3 text-sm leading-7 text-white/85 md:text-base">{tx(first.excerpt, loc)}</p>
-              <p className="mt-5 text-xs text-white/70">{formatDate(first.published_at, loc)} · {t("blog.readingTime", { minutes: first.reading_minutes ?? 5 })}</p>
-            </div>
-          </Link>
-        )}
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {rest.map((p, i) => (
-            <Reveal key={p.id} delay={i * 0.05}>
+        <Pager perPage={6}>
+          {posts.map((p, i) => (
+            <Reveal key={p.id} delay={(i % 6) * 0.05}>
               <Link href={`/blog/${p.slug}`} className="group flex h-full flex-col card overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg focus-ring">
                 <div className="h-1.5 bg-brand-gradient" />
                 <div className="flex flex-1 flex-col p-6">
@@ -51,7 +41,7 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
               </Link>
             </Reveal>
           ))}
-        </div>
+        </Pager>
       </section>
       <CtaBanner compact />
     </>

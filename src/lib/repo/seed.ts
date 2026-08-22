@@ -1,6 +1,7 @@
 import type { Repo, UniversityFilters, ProgramFilters } from "./types";
 import type { Lead, Program, University, UniversityWithRelations } from "@/lib/types";
 import { hydrate } from "./compute";
+import { byId } from "@/lib/utils";
 import { categories } from "@/data/seed/categories";
 import { districts } from "@/data/seed/districts";
 import { universities } from "@/data/seed/universities";
@@ -67,12 +68,12 @@ export const seedRepo: Repo = {
   async listRequirements(universityId) { return requirements.filter((r) => r.university_id === universityId); },
   async listServices() { return [...services].sort((a, b) => a.order - b.order); },
   async getService(slug) { return services.find((s) => s.slug === slug) ?? null; },
-  async listStories() { return stories.map((s) => ({ ...s, university: universities.find((u) => u.id === s.university_id) })); },
+  async listStories() { return [...stories].sort(byId).map((s) => ({ ...s, university: universities.find((u) => u.id === s.university_id) })); },
   async getStory(slug) {
     const s = stories.find((x) => x.slug === slug);
     return s ? { ...s, university: universities.find((u) => u.id === s.university_id) } : null;
   },
-  async listPosts() { return [...posts].sort((a, b) => b.published_at.localeCompare(a.published_at)); },
+  async listPosts() { return [...posts].sort(byId); },
   async getPost(slug) { return posts.find((p) => p.slug === slug) ?? null; },
   async listFaqs() { return [...faqs].sort((a, b) => a.order - b.order); },
   async createLead(lead: Lead) {
