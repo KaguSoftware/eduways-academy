@@ -1,10 +1,14 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getStaff } from "@/lib/admin/auth";
 import { LoginForm } from "@/components/admin/login-form";
 
-export const metadata = { title: "Admin login", robots: { index: false } };
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "admin" });
+  return { title: t("loginTitle"), robots: { index: false } };
+}
 
 export default async function AdminLoginPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

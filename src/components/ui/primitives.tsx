@@ -4,6 +4,7 @@
  * Everything here wraps Radix (via the `radix-ui` meta-package) or is hand-built, styled with brand tokens.
  */
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import {
   Accordion as RxAccordion,
   Checkbox as RxCheckbox,
@@ -250,10 +251,11 @@ export function Slider({ className, ...props }: React.ComponentProps<typeof RxSl
 
 /* ───────────────────────── Number stepper (no native spinners) ───────────────────────── */
 export function NumberStepper({ value, onChange, min = 0, max = Infinity, step = 1, format, className }: { value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number; format?: (v: number) => string; className?: string }) {
+  const t = useTranslations("common");
   const clamp = (v: number) => Math.min(max, Math.max(min, v));
   return (
     <div className={cn("inline-flex h-11 items-stretch overflow-hidden rounded-xl border border-border bg-background", className)}>
-      <button type="button" aria-label="decrease" onClick={() => onChange(clamp(value - step))} className="flex w-11 items-center justify-center text-muted hover:bg-surface hover:text-foreground focus-ring"><Minus className="size-4" /></button>
+      <button type="button" aria-label={t("decrease")} onClick={() => onChange(clamp(value - step))} className="flex w-11 items-center justify-center text-muted hover:bg-surface hover:text-foreground focus-ring"><Minus className="size-4" /></button>
       <input
         inputMode="numeric"
         value={format ? format(value) : String(value)}
@@ -263,7 +265,7 @@ export function NumberStepper({ value, onChange, min = 0, max = Infinity, step =
         }}
         className="w-24 border-x border-border bg-transparent text-center text-sm font-semibold tabular outline-none"
       />
-      <button type="button" aria-label="increase" onClick={() => onChange(clamp(value + step))} className="flex w-11 items-center justify-center text-muted hover:bg-surface hover:text-foreground focus-ring"><Plus className="size-4" /></button>
+      <button type="button" aria-label={t("increase")} onClick={() => onChange(clamp(value + step))} className="flex w-11 items-center justify-center text-muted hover:bg-surface hover:text-foreground focus-ring"><Plus className="size-4" /></button>
     </div>
   );
 }
@@ -308,6 +310,7 @@ export const Dialog = RxDialog.Root;
 export const DialogTrigger = RxDialog.Trigger;
 export const DialogClose = RxDialog.Close;
 export function DialogContent({ className, children, heading, description, side, ...props }: React.ComponentProps<typeof RxDialog.Content> & { heading: React.ReactNode; description?: React.ReactNode; side?: "center" | "end" | "bottom" }) {
+  const tClose = useTranslations("common");
   return (
     <RxDialog.Portal>
       <RxDialog.Overlay className="fixed inset-0 z-[90] bg-brand-950/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out" />
@@ -327,7 +330,7 @@ export function DialogContent({ className, children, heading, description, side,
             <RxDialog.Title className="text-lg font-bold">{heading}</RxDialog.Title>
             {description && <RxDialog.Description className="mt-1 text-sm text-muted">{description}</RxDialog.Description>}
           </div>
-          <RxDialog.Close className="rounded-full p-2 text-muted hover:bg-surface hover:text-foreground focus-ring" aria-label="Close"><X className="size-5" /></RxDialog.Close>
+          <RxDialog.Close className="rounded-full p-2 text-muted hover:bg-surface hover:text-foreground focus-ring" aria-label={tClose("close")}><X className="size-5" /></RxDialog.Close>
         </div>
         {children}
       </RxDialog.Content>
@@ -422,10 +425,11 @@ export function Empty({ title, body, action }: { title: React.ReactNode; body?: 
 /* ───────────────────────── Filter panel pieces ───────────────────────── */
 /** Removable pill used to show an applied filter above the results. */
 export function FilterPill({ label, onRemove }: { label: React.ReactNode; onRemove: () => void }) {
+  const t = useTranslations("common");
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 py-1 pe-1 ps-2.5 text-xs font-semibold text-brand-800">
       {label}
-      <button type="button" onClick={onRemove} aria-label="remove filter" className="flex size-4 items-center justify-center rounded-full text-brand-600 transition-colors hover:bg-brand-200/70 hover:text-brand-900 focus-ring">
+      <button type="button" onClick={onRemove} aria-label={t("removeFilter")} className="flex size-4 items-center justify-center rounded-full text-brand-600 transition-colors hover:bg-brand-200/70 hover:text-brand-900 focus-ring">
         <X className="size-3" strokeWidth={3} />
       </button>
     </span>

@@ -4,7 +4,8 @@ import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { CheckCircle2, Wallet, MapPin } from "lucide-react";
 import { getRepo } from "@/lib/repo";
 import { routing } from "@/i18n/routing";
-import { formatUSD, tx } from "@/lib/utils";
+import { tx } from "@/lib/utils";
+import { createMoney } from "@/lib/money";
 import { slimUniversity } from "@/lib/dto";
 import { PageHeader, CtaBanner } from "@/components/layout/page";
 import { Map } from "@/components/map/map";
@@ -33,6 +34,7 @@ export default async function DistrictPage({ params }: { params: Promise<{ local
   setRequestLocale(locale);
   const t = await getTranslations();
   const loc = await getLocale();
+  const money = createMoney(t, loc);
   const repo = await getRepo();
   const [d, all] = await Promise.all([repo.getDistrict(slug), repo.listUniversities()]);
   if (!d) notFound();
@@ -52,7 +54,7 @@ export default async function DistrictPage({ params }: { params: Promise<{ local
         crumbs={[{ label: t("nav.home"), href: "/" }, { label: t("nav.districts"), href: "/districts" }, { label: name }]}
       >
         <div className="flex flex-wrap gap-3">
-          <Badge variant="brand" className="px-3 py-2 text-sm"><Wallet className="size-4" />{t("districts.avgRent")}: {formatUSD(d.avg_rent_usd, loc)}{t("districts.perMonth")}</Badge>
+          <Badge variant="brand" className="px-3 py-2 text-sm"><Wallet className="size-4" />{t("districts.avgRent")}: {money.usd(d.avg_rent_usd)}{t("districts.perMonth")}</Badge>
           <Badge variant="accent" className="px-3 py-2 text-sm">{t("common.universitiesCount", { count: here.length })}</Badge>
         </div>
       </PageHeader>

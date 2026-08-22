@@ -4,7 +4,8 @@ import * as Icons from "lucide-react";
 import { ShieldCheck, BadgePercent, Plane, Languages, ArrowUpRight, Quote, MapPin, Diamond } from "lucide-react";
 import { InstagramIcon as Instagram } from "@/components/ui/icons";
 import type { UniversityWithRelations, Service, Story, District, Post, Faq, University } from "@/lib/types";
-import { cn, formatNumber, formatUSD, tx, formatDate } from "@/lib/utils";
+import { cn, formatNumber, tx, formatDate } from "@/lib/utils";
+import { createMoney } from "@/lib/money";
 import { SectionHeader } from "@/components/layout/page";
 import { UniversityCard, UniversityLogo } from "@/components/university/university-card";
 import { Button } from "@/components/ui/button";
@@ -223,6 +224,7 @@ export async function StoriesSection({ stories }: { stories: (Story & { universi
 export async function DistrictsSection({ districts, counts }: { districts: District[]; counts: Record<string, number> }) {
   const t = await getTranslations();
   const locale = await getLocale();
+  const money = createMoney(t, locale);
   return (
     <section className="container-x py-20">
       <SectionHeader title={t("home.districtsTitle")} subtitle={t("home.districtsSubtitle")} href="/districts" linkLabel={t("common.viewAll")} />
@@ -237,7 +239,7 @@ export async function DistrictsSection({ districts, counts }: { districts: Distr
                 <h3 className="mt-2 text-xl font-bold">{tx(d.name, locale)}</h3>
                 <p className="mt-1 flex items-center gap-3 text-xs text-white/75">
                   <span className="flex items-center gap-1"><MapPin className="size-3.5" />{t("common.universitiesCount", { count: counts[d.id] ?? 0 })}</span>
-                  <span>{formatUSD(d.avg_rent_usd, locale)}{t("districts.perMonth")}</span>
+                  <span>{money.usd(d.avg_rent_usd)}{t("districts.perMonth")}</span>
                 </p>
               </div>
             </Link>

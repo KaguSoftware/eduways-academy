@@ -6,7 +6,8 @@ import { Link } from "@/i18n/navigation";
 import { ExternalLink, MapPin, Sparkles, MessageCircle, BadgePercent } from "lucide-react";
 import { getRepo } from "@/lib/repo";
 import { routing } from "@/i18n/routing";
-import { formatNumber, formatRange, tx, whatsappLink } from "@/lib/utils";
+import { formatNumber, tx, whatsappLink } from "@/lib/utils";
+import { createMoney } from "@/lib/money";
 import { UniversityDetail } from "@/components/university/university-detail";
 import { UniversityLogo, UniversityCard } from "@/components/university/university-card";
 import { UniversityJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
@@ -45,6 +46,7 @@ export default async function UniversityPage({ params }: { params: Promise<{ loc
   const { locale, slug } = await params;
   setRequestLocale(locale);
   const t = await getTranslations();
+  const money = createMoney(t, locale);
   const repo = await getRepo();
   const [u, all, categories] = await Promise.all([repo.getUniversity(slug), repo.listUniversities(), repo.listCategories()]);
   if (!u) notFound();
@@ -53,7 +55,7 @@ export default async function UniversityPage({ params }: { params: Promise<{ loc
   const nearby = all.filter((x) => x.id !== u.id).sort((a, b) => dist(a, u) - dist(b, u)).slice(0, 5);
   const similar = all.filter((x) => x.id !== u.id && x.type === u.type).sort((a, b) => Math.abs(a.editorial_score - u.editorial_score) - Math.abs(b.editorial_score - u.editorial_score)).slice(0, 3);
   const name = tx(u.name, locale);
-  const wa = whatsappLink(locale === "fa" ? `سلام ادیوویز! درباره پذیرش در ${name} سوال دارم.` : `Hello Eduways! I have a question about admission to ${name}.`);
+  const wa = whatsappLink(t("universities.waMessage", { name }));
 
   return (
     <>
@@ -64,7 +66,7 @@ export default async function UniversityPage({ params }: { params: Promise<{ loc
       <section className="relative overflow-hidden border-b border-border bg-surface">
         <div className="pointer-events-none absolute inset-0 bg-grid opacity-60 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)]" />
         <div className="container-x relative py-10 md:py-14">
-          <nav className="mb-5 flex items-center gap-1.5 text-xs text-muted" aria-label="Breadcrumb">
+          <nav className="mb-5 flex items-center gap-1.5 text-xs text-muted" aria-label={t("common.breadcrumb")}>
             <Link href="/" className="hover:text-brand-700">{t("nav.home")}</Link><span>/</span>
             <Link href="/universities" className="hover:text-brand-700">{t("nav.universities")}</Link><span>/</span>
             <span className="text-foreground">{u.short_name ?? name}</span>
@@ -76,7 +78,7 @@ export default async function UniversityPage({ params }: { params: Promise<{ loc
                 <div className="flex flex-wrap gap-1.5">
                   <Badge variant={u.type === "public" ? "success" : "accent"}>{t(`common.${u.type}`)}</Badge>
                   {u.best_rank && <Badge variant="dark">#{formatNumber(u.best_rank, locale)} TR</Badge>}
-                  {u.eduways_discount_pct ? <Badge variant="success"><BadgePercent className="size-3" />{t("common.upTo")} {formatNumber(u.eduways_discount_pct, locale)}٪ {t("common.discount")}</Badge> : null}
+                  {u.eduways_discount_pct ? <Badge variant="success"><BadgePercent className="size-3" />{t("common.upTo")} {formatNumber(u.eduways_discount_pct, locale)}{t("common.percent")} {t("common.discount")}</Badge> : null}
                 </div>
                 <h1 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-brand-950 md:text-4xl">{name}</h1>
                 <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
@@ -94,7 +96,7 @@ export default async function UniversityPage({ params }: { params: Promise<{ loc
           </div>
           <dl className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
-              [t("universities.tuitionRange"), `${formatRange(u.avg_tuition_min, u.avg_tuition_max, locale)}`],
+              [t("universities.tuitionRange"), `${money.range(u.avg_tuition_min, u.avg_tuition_max)}`],
               [t("common.programsCount", { count: u.programs.length }), `${formatNumber(u.programs.filter((p) => p.language !== "tr").length, locale)} EN`],
               [t("common.score"), `${formatNumber(u.editorial_score, locale)}/100`],
               [t("universities.valueScore"), `${formatNumber(u.value_score ?? 0, locale)}/100`],
@@ -124,7 +126,7 @@ export default async function UniversityPage({ params }: { params: Promise<{ loc
           {u.scholarships.filter((s) => s.type === "eduways").map((s) => (
             <div key={s.id} className="card border-success/30 p-5">
               <p className="text-xs font-semibold uppercase tracking-wide text-success">{t("common.eduwaysDeal")}</p>
-              <p className="mt-1 text-2xl font-extrabold tabular">{t("common.upTo")} {formatNumber(s.discount_pct, locale)}٪</p>
+              <p className="mt-1 text-2xl font-extrabold tabular">{t("common.upTo")} {formatNumber(s.discount_pct, locale)}{t("common.percent")}</p>
               <p className="mt-1 text-sm text-muted">{tx(s.conditions, locale)}</p>
             </div>
           ))}

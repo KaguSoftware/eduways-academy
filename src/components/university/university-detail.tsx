@@ -6,7 +6,8 @@ import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { CheckCircle2, Circle, ExternalLink, CalendarDays, FileCheck2, BadgePercent, Trophy, MapPin, Languages, Building2, Users, Home, CalendarClock } from "lucide-react";
 import type { UniversityWithRelations, Category, ProgramLevel, UniversityWithRelations as U } from "@/lib/types";
-import { cn, formatNumber, formatRange, formatUSD, formatDate, tx } from "@/lib/utils";
+import { cn, formatNumber, formatDate, tx } from "@/lib/utils";
+import { useMoney } from "@/lib/money";
 import { Tabs, TabsContent, TabsList, TabsTrigger, Badge, Segmented, Select, Tooltip } from "@/components/ui/primitives";
 import { Map } from "@/components/map/map";
 import { ScoreRing } from "./university-card";
@@ -56,6 +57,7 @@ function Fact({ icon: Icon, label, value }: { icon: React.ComponentType<{ classN
 function Overview({ u }: { u: UniversityWithRelations }) {
   const t = useTranslations();
   const locale = useLocale();
+  const money = useMoney();
   return (
     <div className="grid gap-8">
       <p className="max-w-3xl text-base leading-8 text-foreground/90">{tx(u.description, locale)}</p>
@@ -72,11 +74,11 @@ function Overview({ u }: { u: UniversityWithRelations }) {
       <div>
         <h3 className="mb-3 font-bold">{t("universities.keyFacts")}</h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <Fact icon={BadgePercent} label={t("universities.tuitionRange")} value={`${formatRange(u.avg_tuition_min, u.avg_tuition_max, locale)} ${t("common.perYear")}`} />
+          <Fact icon={BadgePercent} label={t("universities.tuitionRange")} value={`${money.range(u.avg_tuition_min, u.avg_tuition_max)} ${t("common.perYear")}`} />
           <Fact icon={Building2} label={t("universities.type")} value={t(`common.${u.type}`)} />
           <Fact icon={Languages} label={t("universities.languages")} value={u.languages.map((l) => t(`common.${l}` as never)).join(" · ")} />
           <Fact icon={Users} label={t("universities.studentCount")} value={u.student_count ? formatNumber(u.student_count, locale) : "—"} />
-          <Fact icon={Trophy} label={t("universities.intlPct")} value={u.intl_student_pct ? `${formatNumber(u.intl_student_pct, locale)}٪` : "—"} />
+          <Fact icon={Trophy} label={t("universities.intlPct")} value={u.intl_student_pct ? `${formatNumber(u.intl_student_pct, locale)}${t("common.percent")}` : "—"} />
           <Fact icon={Home} label={t("universities.dorm")} value={u.has_dorm ? t("common.yes") : t("common.no")} />
           <Fact icon={CalendarClock} label={t("common.founded")} value={formatNumber(u.founded, locale, { useGrouping: false })} />
           <Fact icon={MapPin} label={t("universities.district")} value={u.district ? `${tx(u.district.name, locale)} · ${t(`common.${u.district.side}`)}` : "Istanbul"} />
@@ -99,6 +101,7 @@ function Overview({ u }: { u: UniversityWithRelations }) {
 function Programs({ u, categories }: { u: UniversityWithRelations; categories: Category[] }) {
   const t = useTranslations();
   const locale = useLocale();
+  const money = useMoney();
   const [level, setLevel] = React.useState<"all" | ProgramLevel>("all");
   const [lang, setLang] = React.useState<"all" | "en" | "tr">("all");
   const [cat, setCat] = React.useState("all");
@@ -111,7 +114,7 @@ function Programs({ u, categories }: { u: UniversityWithRelations; categories: C
         <p className="text-sm text-muted">{t("universities.programsIntro", { count: formatNumber(u.programs.length, locale) })}</p>
         <div className="flex flex-wrap items-center gap-2">
           <Segmented size="sm" value={level} onChange={setLevel} options={[{ value: "all", label: t("common.all") }, ...LEVELS.filter((l) => u.programs.some((p) => p.level === l)).map((l) => ({ value: l, label: t(`common.${l}`) }))]} />
-          <Segmented size="sm" value={lang} onChange={setLang} options={[{ value: "all", label: t("common.all") }, { value: "en", label: "EN" }, { value: "tr", label: "TR" }]} />
+          <Segmented size="sm" value={lang} onChange={setLang} options={[{ value: "all", label: t("common.all") }, { value: "en", label: t("common.enShort") }, { value: "tr", label: t("common.trShort") }]} />
           <Select size="sm" value={cat} onValueChange={setCat} className="w-48" options={[{ value: "all", label: t("programs.field") + ": " + t("common.all") }, ...cats.map((c) => ({ value: c.id, label: tx(c.name, locale) }))]} />
         </div>
       </div>
@@ -129,7 +132,7 @@ function Programs({ u, categories }: { u: UniversityWithRelations; categories: C
                     <td className="px-4 py-3 font-medium">{tx(p.name, locale)}{p.tuition_note && <span className="block text-xs font-normal text-muted">{tx(p.tuition_note, locale)}</span>}</td>
                     <td className="px-4 py-3"><Badge variant={p.language === "tr" ? "outline" : "accent"}>{t(`common.${p.language}` as never)}</Badge></td>
                     <td className="px-4 py-3 tabular">{t("common.years", { count: p.duration_years })}</td>
-                    <td className="px-4 py-3 text-end font-bold tabular">{p.tuition_usd === 0 ? t("common.free") : formatUSD(p.tuition_usd, locale)}</td>
+                    <td className="px-4 py-3 text-end font-bold tabular">{p.tuition_usd === 0 ? t("common.free") : money.usd(p.tuition_usd)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -210,7 +213,7 @@ function Scholarships({ u }: { u: UniversityWithRelations }) {
                 <Badge variant={s.type === "eduways" ? "success" : s.type === "government" ? "dark" : "brand"}>{s.type === "eduways" ? t("common.eduwaysDeal") : s.type === "government" ? "Türkiye Bursları" : tx(u.name, locale)}</Badge>
                 <h3 className="mt-2 font-bold">{tx(s.title, locale)}</h3>
               </div>
-              <span className="shrink-0 text-3xl font-extrabold tabular text-gradient">{t("common.upTo")} {formatNumber(s.discount_pct, locale)}٪</span>
+              <span className="shrink-0 text-3xl font-extrabold tabular text-gradient">{t("common.upTo")} {formatNumber(s.discount_pct, locale)}{t("common.percent")}</span>
             </div>
             <p className="mt-3 text-sm leading-7 text-muted">{tx(s.conditions, locale)}</p>
             {s.valid_until && <p className="mt-2 text-xs text-muted">{t("universities.deadlines")}: {formatDate(s.valid_until, locale)}</p>}
@@ -231,7 +234,7 @@ function Rankings({ u }: { u: UniversityWithRelations }) {
         {u.rankings.length ? (
           <div className="overflow-hidden rounded-2xl border border-border">
             <table className="w-full text-sm">
-              <thead className="bg-surface text-xs uppercase tracking-wide text-muted"><tr><th className="px-4 py-3 text-start font-semibold">{t("common.source")}</th><th className="px-4 py-3 text-start font-semibold">{t("rankings.colRank")}</th><th className="px-4 py-3 text-start font-semibold">World</th><th className="px-4 py-3 text-end font-semibold"></th></tr></thead>
+              <thead className="bg-surface text-xs uppercase tracking-wide text-muted"><tr><th className="px-4 py-3 text-start font-semibold">{t("common.source")}</th><th className="px-4 py-3 text-start font-semibold">{t("rankings.colRank")}</th><th className="px-4 py-3 text-start font-semibold">{t("rankings.colWorld")}</th><th className="px-4 py-3 text-end font-semibold"></th></tr></thead>
               <tbody>
                 {u.rankings.map((r) => (
                   <tr key={r.id} className="border-t border-border">
@@ -259,6 +262,7 @@ function Rankings({ u }: { u: UniversityWithRelations }) {
 function Location({ u, nearby }: { u: UniversityWithRelations; nearby: U[] }) {
   const t = useTranslations();
   const locale = useLocale();
+  const money = useMoney();
   const pins = [
     { id: u.id, lat: u.lat, lng: u.lng, title: tx(u.name, locale), subtitle: u.district ? tx(u.district.name, locale) : undefined, accent: true },
     ...nearby.map((n) => ({ id: n.id, lat: n.lat, lng: n.lng, title: tx(n.name, locale), subtitle: n.district ? tx(n.district.name, locale) : undefined, href: `/${locale === "fa" ? "" : "en/"}universities/${n.slug}`.replace("//", "/") })),
@@ -274,7 +278,7 @@ function Location({ u, nearby }: { u: UniversityWithRelations; nearby: U[] }) {
           <Link href={`/districts/${u.district.slug}`} className="card block p-5 transition-colors hover:border-brand-300">
             <p className="text-xs font-medium uppercase tracking-wide text-muted">{t("universities.district")}</p>
             <p className="mt-1 text-lg font-bold">{tx(u.district.name, locale)}</p>
-            <p className="text-sm text-muted">{t(`common.${u.district.side}`)} · {formatUSD(u.district.avg_rent_usd, locale)}{t("districts.perMonth")}</p>
+            <p className="text-sm text-muted">{t(`common.${u.district.side}`)} · {money.usd(u.district.avg_rent_usd)}{t("districts.perMonth")}</p>
             <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted">{tx(u.district.description, locale)}</p>
           </Link>
         )}

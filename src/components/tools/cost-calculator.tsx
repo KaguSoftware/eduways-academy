@@ -7,7 +7,8 @@ import { Link } from "@/i18n/navigation";
 import { Sparkles } from "lucide-react";
 import type { District } from "@/lib/types";
 import type { I18nText } from "@/lib/utils";
-import { formatNumber, formatUSD, tx } from "@/lib/utils";
+import { formatNumber, tx } from "@/lib/utils";
+import { useMoney } from "@/lib/money";
 import { Select, Segmented, Slider, Field } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +22,7 @@ export function CostCalculator({ universities, districts }: { universities: Calc
   const t = useTranslations("calculator");
   const tc = useTranslations("common");
   const locale = useLocale();
+  const money = useMoney();
   const [uniSlug, setUniSlug] = React.useState(universities[0]?.slug ?? "");
   const uni = universities.find((u) => u.slug === uniSlug) ?? universities[0];
   const [programId, setProgramId] = React.useState("any");
@@ -48,7 +50,7 @@ export function CostCalculator({ universities, districts }: { universities: Calc
 
   const Bar = ({ label, value, color }: { label: string; value: number; color: string }) => (
     <div>
-      <div className="mb-1 flex items-center justify-between text-sm"><span className="text-muted">{label}</span><span className="font-bold tabular">{formatUSD(value, locale)}</span></div>
+      <div className="mb-1 flex items-center justify-between text-sm"><span className="text-muted">{label}</span><span className="font-bold tabular">{money.usd(value)}</span></div>
       <div className="h-2.5 overflow-hidden rounded-full bg-surface-2"><motion.div className={`h-full rounded-full ${color}`} animate={{ width: `${(value / max) * 100}%` }} transition={{ type: "spring", stiffness: 120, damping: 20 }} /></div>
     </div>
   );
@@ -60,11 +62,11 @@ export function CostCalculator({ universities, districts }: { universities: Calc
           <Select value={uniSlug} onValueChange={setUniSlug} options={universities.map((u) => ({ value: u.slug, label: tx(u.name, locale) }))} />
         </Field>
         <Field label={t("program")}>
-          <Select value={programId} onValueChange={setProgramId} options={[{ value: "any", label: t("anyProgram") }, ...(uni?.programs ?? []).map((p) => ({ value: p.id, label: `${tx(p.name, locale)} · ${tc(p.level as never)} · ${formatUSD(p.tuition_usd, locale)}` }))]} />
+          <Select value={programId} onValueChange={setProgramId} options={[{ value: "any", label: t("anyProgram") }, ...(uni?.programs ?? []).map((p) => ({ value: p.id, label: `${tx(p.name, locale)} · ${tc(p.level as never)} · ${money.usd(p.tuition_usd)}` }))]} />
         </Field>
         <div className="grid gap-6 sm:grid-cols-2">
           <Field label={t("district")}>
-            <Select value={districtId} onValueChange={setDistrictId} options={districts.map((d) => ({ value: d.id, label: `${tx(d.name, locale)} · ${formatUSD(d.avg_rent_usd, locale)}` }))} />
+            <Select value={districtId} onValueChange={setDistrictId} options={districts.map((d) => ({ value: d.id, label: `${tx(d.name, locale)} · ${money.usd(d.avg_rent_usd)}` }))} />
           </Field>
           <Field label={t("housing")}>
             <Segmented value={housing} onChange={setHousing} options={[{ value: "dorm", label: t("housingDorm") }, { value: "shared", label: t("housingShared") }, { value: "studio", label: t("housingStudio") }]} className="w-full [&>button]:flex-1" size="sm" />
@@ -73,7 +75,7 @@ export function CostCalculator({ universities, districts }: { universities: Calc
         <Field label={t("lifestyle")}>
           <Segmented value={lifestyle} onChange={setLifestyle} options={[{ value: "basic", label: t("lifestyleBasic") }, { value: "normal", label: t("lifestyleNormal") }, { value: "comfort", label: t("lifestyleComfort") }]} className="w-full [&>button]:flex-1" />
         </Field>
-        <Field label={<span className="flex items-center justify-between"><span>{t("discount")}</span><span className="font-bold tabular text-success">{formatNumber(discount, locale)}٪</span></span>}>
+        <Field label={<span className="flex items-center justify-between"><span>{t("discount")}</span><span className="font-bold tabular text-success">{formatNumber(discount, locale)}{tc("percent")}</span></span>}>
           <Slider value={[discount]} onValueChange={([v]) => setDiscount(v)} min={0} max={75} step={5} />
         </Field>
       </div>
@@ -82,8 +84,8 @@ export function CostCalculator({ universities, districts }: { universities: Calc
         <div className="relative overflow-hidden rounded-3xl bg-brand-gradient p-6 text-white shadow-lg">
           <div className="pointer-events-none absolute -end-10 -top-10 size-40 rounded-full bg-white/10 blur-2xl" />
           <p className="text-sm font-medium text-white/80">{t("total")}</p>
-          <motion.p key={total} initial={{ opacity: 0.5, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mt-1 text-4xl font-extrabold tabular tracking-tight">{formatUSD(total, locale)}</motion.p>
-          <p className="mt-1 text-xs text-white/75">{t("perMonth", { amount: formatUSD(rentMonthly + livingMonthly, locale) })}</p>
+          <motion.p key={total} initial={{ opacity: 0.5, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mt-1 text-4xl font-extrabold tabular tracking-tight">{money.usd(total)}</motion.p>
+          <p className="mt-1 text-xs text-white/75">{t("perMonth", { amount: money.usd(rentMonthly + livingMonthly) })}</p>
           <Button asChild className="mt-5 w-full bg-white text-brand-900 hover:bg-brand-50"><Link href={{ pathname: "/consultation", query: { university: uni?.slug } }}><Sparkles className="size-4" />{t("getQuote")}</Link></Button>
         </div>
         <div className="card space-y-4 p-6">
@@ -91,7 +93,7 @@ export function CostCalculator({ universities, districts }: { universities: Calc
           <Bar label={t("rent")} value={rent} color="bg-accent-500" />
           <Bar label={t("living")} value={living} color="bg-brand-300" />
           <Bar label={t("oneTime")} value={ONE_TIME} color="bg-warning" />
-          {discount > 0 && <p className="text-xs text-success">− {formatUSD(listTuition - tuition, locale)} {t("discount")}</p>}
+          {discount > 0 && <p className="text-xs text-success">− {money.usd(listTuition - tuition)} {t("discount")}</p>}
           <p className="border-t border-border pt-3 text-xs leading-5 text-muted">{t("disclaimer")}</p>
         </div>
       </div>

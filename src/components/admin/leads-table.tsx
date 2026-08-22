@@ -4,7 +4,8 @@ import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { MessageCircle, Download } from "lucide-react";
 import type { Lead } from "@/lib/types";
-import { formatDate, formatUSD } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useMoney } from "@/lib/money";
 import { Select, Segmented, SearchInput, Empty } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { updateLeadStatus } from "@/lib/admin/actions";
@@ -14,6 +15,7 @@ const STATUSES = ["new", "contacted", "closed"] as const;
 export function LeadsTable({ leads: initial }: { leads: Lead[] }) {
   const t = useTranslations();
   const locale = useLocale();
+  const money = useMoney();
   const [leads, setLeads] = React.useState(initial);
   const [filter, setFilter] = React.useState<"all" | (typeof STATUSES)[number]>("all");
   const [q, setQ] = React.useState("");
@@ -69,7 +71,7 @@ export function LeadsTable({ leads: initial }: { leads: Lead[] }) {
                   </td>
                   <td className="px-4 py-3 font-en" dir="ltr">{l.phone}</td>
                   <td className="px-4 py-3">{l.desired_major || "—"}<p className="text-xs text-muted">{l.interest_level ? t(`common.${l.interest_level}`) : ""}</p></td>
-                  <td className="px-4 py-3 tabular">{l.budget_usd ? formatUSD(l.budget_usd, locale) : "—"}</td>
+                  <td className="px-4 py-3 tabular">{l.budget_usd ? money.usd(l.budget_usd) : "—"}</td>
                   <td className="px-4 py-3">{l.country ? t(`consultation.countries.${l.country}` as never) : "—"}</td>
                   <td className="px-4 py-3"><Select size="sm" className="w-36" value={l.status ?? "new"} onValueChange={(v) => l.id && setStatus(l.id, v as never)} options={STATUSES.map((s) => ({ value: s, label: label(s) }))} /></td>
                   <td className="px-4 py-3 text-xs text-muted">{l.created_at ? formatDate(l.created_at, locale) : ""}<p className="font-en" dir="ltr">{l.source_page}</p></td>

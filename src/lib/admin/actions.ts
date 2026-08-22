@@ -6,13 +6,18 @@ import { TABLES, type TableSpec } from "./specs";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hasSupabase } from "@/lib/supabase/env";
 
-export type ActionResult = { ok: true } | { ok: false; error: string };
+/**
+ * `error` is always a code, never prose: the action runs on the server with no reliable request
+ * locale for a *returned* string, so the form translates the code (see ERROR_KEYS in
+ * components/admin/record-form.tsx). `detail` carries the raw Postgres text for debugging.
+ */
+export type ActionResult = { ok: true } | { ok: false; error: string; detail?: string };
 
-/** Turn raw Postgres errors into something an editor can act on. */
-function describe(error: { code?: string; message: string; details?: string | null }): string {
-  if (error.code === "23503") return `${error.message} — the referenced record does not exist; pick an existing one from the dropdown.`;
-  if (error.code === "23505") return `${error.message} — a record with this id or slug already exists.`;
-  return error.message;
+/** Turn raw Postgres errors into a code an editor can act on. */
+function describe(error: { code?: string; message: string; details?: string | null }): ActionResult {
+  if (error.code === "23503") return { ok: false, error: "fk_missing", detail: error.message };
+  if (error.code === "23505") return { ok: false, error: "duplicate", detail: error.message };
+  return { ok: false, error: "db_error", detail: error.message };
 }
 
 function revalidateAll() {
@@ -53,7 +58,7 @@ export async function saveRecord(table: string, record: Record<string, unknown>)
   const allowed = new Set(spec.fields.map((f) => f.key));
   const clean = Object.fromEntries(Object.entries(record).filter(([k]) => allowed.has(k)));
   const { error } = await admin.from(spec.table).upsert(clean, { onConflict: spec.idField });
-  if (error) return { ok: false, error: describe(error) };
+  if (error) return describe(error);
   if (spec.fields.some((f) => f.key === "order")) await resequence(admin, spec, clean);
   revalidateAll();
   return { ok: true };
@@ -69,7 +74,7 @@ export async function deleteRecord(table: string, id: string): Promise<ActionRes
   const admin = createAdminClient();
   if (!admin) return { ok: false, error: "no_service_role" };
   const { error } = await admin.from(spec.table).delete().eq(spec.idField, id);
-  if (error) return { ok: false, error: error.message };
+  if (error) return describe(error);
   revalidateAll();
   return { ok: true };
 }
@@ -81,7 +86,7 @@ export async function updateLeadStatus(id: string, status: "new" | "contacted" |
   const admin = createAdminClient();
   if (!admin) return { ok: false, error: "no_service_role" };
   const { error } = await admin.from("leads").update({ status }).eq("id", id);
-  if (error) return { ok: false, error: error.message };
+  if (error) return describe(error);
   revalidatePath("/admin/leads");
   return { ok: true };
 }

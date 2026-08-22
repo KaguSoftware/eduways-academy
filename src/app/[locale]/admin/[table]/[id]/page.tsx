@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { ChevronLeft, ExternalLink } from "lucide-react";
 import { requireStaff } from "@/lib/admin/auth";
 import { TABLES } from "@/lib/admin/specs";
+import { adminText } from "@/lib/admin/labels";
 import { getRow, listRefOptions } from "@/lib/admin/data";
 import { hasSupabase } from "@/lib/supabase/env";
 import { tx } from "@/lib/utils";
@@ -25,6 +26,7 @@ export default async function AdminRecordPage({ params }: { params: Promise<{ lo
   setRequestLocale(locale);
   await requireStaff(locale);
   const t = await getTranslations("admin");
+  const A = adminText(await getTranslations(), table);
   const spec = TABLES[table];
   if (!spec) notFound();
   const id = decodeURIComponent(rawId);
@@ -36,7 +38,7 @@ export default async function AdminRecordPage({ params }: { params: Promise<{ lo
     ? Object.fromEntries(spec.fields.filter((f) => f.type === "boolean" || f.key === "status").map((f) => [f.key, f.type === "boolean" ? false : "published"]))
     : await getRow(table, id);
   if (!row) notFound();
-  const title = isNew ? t("newRecord", { name: tx(spec.singular, locale) }) : typeof row[spec.titleField] === "object" && row[spec.titleField] ? tx(row[spec.titleField] as never, locale) : String(row[spec.titleField] ?? id);
+  const title = isNew ? t("newRecord", { name: A.singular() }) : typeof row[spec.titleField] === "object" && row[spec.titleField] ? tx(row[spec.titleField] as never, locale) : String(row[spec.titleField] ?? id);
   const refOptions = await listRefOptions(spec, locale);
   const publicHref = !isNew && PUBLIC_PATH[table] ? PUBLIC_PATH[table](row) : null;
 
@@ -44,7 +46,7 @@ export default async function AdminRecordPage({ params }: { params: Promise<{ lo
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <Link href={`/admin/${table}`} className="inline-flex items-center gap-1 text-xs text-muted hover:text-foreground"><ChevronLeft className="size-3.5 ltr:rotate-180" />{tx(spec.label, locale)}</Link>
+          <Link href={`/admin/${table}`} className="inline-flex items-center gap-1 text-xs text-muted hover:text-foreground"><ChevronLeft className="size-3.5 ltr:rotate-180" />{A.label()}</Link>
           <h1 className="mt-1 text-2xl font-extrabold">{title}</h1>
           {!isNew && <p className="font-en text-xs text-muted" dir="ltr">{id}</p>}
         </div>

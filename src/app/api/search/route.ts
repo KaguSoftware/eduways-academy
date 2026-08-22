@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { getRepo } from "@/lib/repo";
-import { tx, formatUSD } from "@/lib/utils";
+import { tx } from "@/lib/utils";
+import { createMoney } from "@/lib/money";
 import type { SearchHit } from "@/components/layout/command-search";
 
 export const revalidate = 3600;
@@ -11,6 +13,7 @@ export async function GET(req: Request) {
   const locale = searchParams.get("locale") === "en" ? "en" : "fa";
   if (q.length < 2) return NextResponse.json([]);
 
+  const money = createMoney(await getTranslations({ locale }), locale);
   const repo = await getRepo();
   const [unis, programs, districts] = await Promise.all([repo.listUniversities({ q }), repo.listPrograms({ q }), repo.listDistricts()]);
   const ql = q.toLowerCase();
@@ -19,13 +22,13 @@ export async function GET(req: Request) {
     ...unis.slice(0, 6).map((u) => ({
       type: "university" as const,
       title: tx(u.name, locale),
-      subtitle: `${u.district ? tx(u.district.name, locale) : ""} · ${formatUSD(u.avg_tuition_min, locale)}+`,
+      subtitle: `${u.district ? tx(u.district.name, locale) : ""} · ${money.usd(u.avg_tuition_min)}+`,
       href: `/universities/${u.slug}`,
     })),
     ...programs.slice(0, 8).map((p) => ({
       type: "program" as const,
       title: tx(p.name, locale),
-      subtitle: `${tx(p.university.name, locale)} · ${formatUSD(p.tuition_usd, locale)}`,
+      subtitle: `${tx(p.university.name, locale)} · ${money.usd(p.tuition_usd)}`,
       href: `/universities/${p.university.slug}?tab=programs`,
     })),
     ...districts

@@ -31,6 +31,7 @@ const MORE = [
 
 export function Header() {
   const t = useTranslations("nav");
+  const tm = useTranslations("meta");
   const locale = useLocale();
   const pathname = usePathname();
   const [scrolled, setScrolled] = React.useState(false);
@@ -82,15 +83,15 @@ export function Header() {
   return (
     <header className={cn("sticky top-0 z-50 w-full transition-all duration-300", scrolled || menuOpen ? "glass border-b border-border/70 shadow-sm" : "bg-transparent")}>
       <div className="container-x relative z-10 flex h-16 items-center justify-between gap-2 sm:gap-4 md:h-[4.5rem]">
-        <Link href="/" className="flex min-w-0 items-center gap-2.5 focus-ring rounded-full" aria-label="Eduways Academy">
-          <Image src="/brand/logo.jpg" alt="Eduways Academy" width={40} height={40} className="size-10 shrink-0 rounded-full shadow-sm" priority />
+        <Link href="/" className="flex min-w-0 items-center gap-2.5 focus-ring rounded-full" aria-label={tm("alt")}>
+          <Image src="/brand/logo.jpg" alt={tm("alt")} width={40} height={40} className="size-10 shrink-0 rounded-full shadow-sm" priority />
           <span className="flex min-w-0 flex-col leading-none">
             <span className="truncate text-[15px] font-extrabold tracking-tight text-brand-900">EDUWAYS</span>
             <span className="truncate text-[10px] font-medium uppercase tracking-[0.18em] text-muted">Academy · Istanbul</span>
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-1 lg:flex" aria-label={t("primary")}>
           {NAV.map((n) => (
             <Link
               key={n.key}
@@ -198,7 +199,7 @@ function MobilePanel({ open, onNavigate, isActive }: { open: boolean; onNavigate
       <div aria-hidden className="absolute inset-0 -z-10 bg-background" />
       <div className="flex h-full flex-col">
         {/* Only the links scroll; the CTA below stays pinned to the bottom of the panel. */}
-        <nav className="flex flex-1 flex-col overflow-y-auto overscroll-contain" aria-label="Mobile">
+        <nav className="flex flex-1 flex-col overflow-y-auto overscroll-contain" aria-label={t("mobile")}>
           {[...NAV, ...MORE].map((n, i) => {
             const active = isActive(n.href);
             return (

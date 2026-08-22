@@ -1,23 +1,35 @@
 "use client";
 
 import * as React from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Loader2, Save, Trash2, CheckCircle2, AlertCircle, AlertTriangle, Plus, ArrowUp, ArrowDown, X } from "lucide-react";
 import type { FieldSpec, RefOption, TableSpec } from "@/lib/admin/specs";
-import { SECTION_LABELS } from "@/lib/admin/specs";
+import { SECTIONS } from "@/lib/admin/specs";
+import { adminText, type AdminText } from "@/lib/admin/labels";
 import { saveRecord, deleteRecord } from "@/lib/admin/actions";
-import { cn, tx, toEnglishDigits, slugify } from "@/lib/utils";
+import { cn, toEnglishDigits, slugify } from "@/lib/utils";
 import { Field, Input, Textarea, Select, Switch, Tabs, TabsList, TabsTrigger, TabsContent, Dialog, DialogContent, DialogTrigger, inputClass } from "@/components/ui/primitives";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 
 type Row = Record<string, unknown>;
-const SECTIONS = ["basic", "content", "numbers", "meta"] as const;
+
+/** Server actions return a code, not a sentence, so the message is translated here. */
+const ERROR_KEYS: Record<string, string> = {
+  unauthorized: "errUnauthorized",
+  no_db: "errNoDb",
+  unknown_table: "errUnknownTable",
+  no_service_role: "errNoServiceRole",
+  fk_missing: "errFk",
+  duplicate: "errDuplicate",
+  db_error: "errDb",
+};
 
 export function RecordForm({ table, spec, initial, refOptions, isNew, readOnly }: { table: string; spec: TableSpec; initial: Row; refOptions?: Record<string, RefOption[]>; isNew: boolean; readOnly: boolean }) {
   const t = useTranslations("admin");
-  const locale = useLocale();
+  const tc = useTranslations("common");
+  const A = adminText(useTranslations(), table);
   const router = useRouter();
   const [row, setRow] = React.useState<Row>(initial);
   const [saving, setSaving] = React.useState(false);
@@ -49,10 +61,17 @@ export function RecordForm({ table, spec, initial, refOptions, isNew, readOnly }
     setMsg(null);
   };
 
+  const failure = (res: { error: string; detail?: string }) => {
+    const key = ERROR_KEYS[res.error];
+    // An unmapped code is still worth showing raw — it is a bug, not an editor mistake.
+    const body = key ? t(key) : res.error;
+    return `${t("error")}: ${body}${res.detail ? ` — ${res.detail}` : ""}`;
+  };
+
   const missing = spec.fields.filter((f) => f.required && (row[f.key] === null || row[f.key] === undefined || row[f.key] === "" || (f.type === "i18n" && !((row[f.key] as Record<string, string>)?.fa || (row[f.key] as Record<string, string>)?.en))));
 
   const save = async () => {
-    if (missing.length) { setMsg({ ok: false, text: `${t("error")}: ${missing.map((f) => tx(f.label, locale)).join("، ")}` }); return; }
+    if (missing.length) { setMsg({ ok: false, text: `${t("error")}: ${missing.map(A.field).join(tc("listSeparator"))}` }); return; }
     setSaving(true);
     setMsg(null);
     const res = await saveRecord(table, row);
@@ -62,14 +81,14 @@ export function RecordForm({ table, spec, initial, refOptions, isNew, readOnly }
       setDirty(false);
       if (isNew) router.push(`/admin/${table}/${encodeURIComponent(String(row[spec.idField]))}`);
       router.refresh();
-    } else setMsg({ ok: false, text: `${t("error")}: ${res.error}` });
+    } else setMsg({ ok: false, text: failure(res) });
   };
   const del = async (): Promise<string | null> => {
     const res = await deleteRecord(table, String(row[spec.idField]));
     // Full navigation back to the list: a client-side push re-renders the prefetched list, which
     // still contains the row we just deleted (router.refresh() only refreshes the current route).
     if (res.ok) { window.location.assign(window.location.pathname.replace(/\/[^/]+$/, "")); return null; }
-    const text = `${t("error")}: ${res.error}`;
+    const text = failure(res);
     setMsg({ ok: false, text });
     return text;
   };
@@ -81,11 +100,11 @@ export function RecordForm({ table, spec, initial, refOptions, isNew, readOnly }
         if (!fields.length) return null;
         return (
           <section key={section} className="card p-5 md:p-6">
-            <h2 className="mb-5 text-sm font-bold uppercase tracking-wide text-brand-800">{tx(SECTION_LABELS[section], locale)}</h2>
+            <h2 className="mb-5 text-sm font-bold uppercase tracking-wide text-brand-800">{A.section(section)}</h2>
             <div className="grid gap-5 md:grid-cols-2">
               {fields.map((f) => (
                 <div key={f.key} className={cn(["i18n-long", "i18n-md", "i18n-list", "json", "steps"].includes(f.type) && "md:col-span-2")}>
-                  <FieldControl f={f} value={row[f.key]} refOptions={refOptions?.[f.key]} onChange={(v) => set(f.key, v)} disabled={readOnly || (f.readOnly && !isNew) || (f.key === spec.idField && !isNew)} locale={locale} />
+                  <FieldControl f={f} value={row[f.key]} refOptions={refOptions?.[f.key]} onChange={(v) => set(f.key, v)} disabled={readOnly || (f.readOnly && !isNew) || (f.key === spec.idField && !isNew)} A={A} />
                 </div>
               ))}
             </div>
@@ -97,7 +116,7 @@ export function RecordForm({ table, spec, initial, refOptions, isNew, readOnly }
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 md:px-8">
           <Button onClick={save} disabled={saving || readOnly}>{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}{saving ? t("saving") : t("save")}</Button>
           {!isNew && !readOnly && (
-            <DeleteDialog id={String(row[spec.idField])} label={tx(spec.singular, locale)} cascade={table === "universities"} onConfirm={del} />
+            <DeleteDialog id={String(row[spec.idField])} label={A.singular()} cascade={table === "universities"} onConfirm={del} />
           )}
           {msg ? (
             <p className={cn("flex items-center gap-1.5 text-sm font-medium", msg.ok ? "text-success" : "text-danger")}>{msg.ok ? <CheckCircle2 className="size-4" /> : <AlertCircle className="size-4" />}{msg.text}</p>
@@ -133,6 +152,7 @@ function NumberInput({ value, onChange, disabled, placeholder }: { value: unknow
 }
 
 function I18nInput({ value, onChange, long, disabled }: { value: unknown; onChange: (v: unknown) => void; long?: "long" | "md"; disabled?: boolean }) {
+  const tc = useTranslations("common");
   const v = (value && typeof value === "object" ? value : { fa: "", en: "" }) as Record<string, string>;
   const setLang = (lang: string, s: string) => onChange({ ...v, [lang]: s });
   const filled = (lang: string) => Boolean(v[lang]?.trim());
@@ -142,7 +162,7 @@ function I18nInput({ value, onChange, long, disabled }: { value: unknown; onChan
         {(["fa", "en"] as const).map((lang) => (
           <TabsTrigger key={lang} value={lang} className="inline-flex items-center gap-1.5">
             <span className={cn("size-1.5 rounded-full", filled(lang) ? "bg-success" : "bg-border")} />
-            {lang === "fa" ? "فارسی" : "English"}
+            {tc(`lang.${lang}`)}
           </TabsTrigger>
         ))}
       </TabsList>
@@ -161,6 +181,7 @@ function I18nInput({ value, onChange, long, disabled }: { value: unknown; onChan
 
 /** Bilingual bullet list stored as I18nText[] — edited as plain text, one item per line. */
 function I18nListInput({ value, onChange, disabled }: { value: unknown; onChange: (v: unknown) => void; disabled?: boolean }) {
+  const tc = useTranslations("common");
   const toText = (v: unknown, lang: "fa" | "en") => (Array.isArray(v) ? (v as Record<string, string>[]) : []).map((it) => it?.[lang] ?? "").join("\n");
   // Kept as raw text so blank lines and trailing spaces survive while typing; the array is rebuilt on every change.
   const [draft, setDraft] = React.useState(() => ({ fa: toText(value, "fa"), en: toText(value, "en") }));
@@ -188,7 +209,7 @@ function I18nListInput({ value, onChange, disabled }: { value: unknown; onChange
         {(["fa", "en"] as const).map((lang) => (
           <TabsTrigger key={lang} value={lang} className="inline-flex items-center gap-1.5">
             <span className={cn("size-1.5 rounded-full", draft[lang].trim() ? "bg-success" : "bg-border")} />
-            {lang === "fa" ? "فارسی" : "English"}
+            {tc(`lang.${lang}`)}
           </TabsTrigger>
         ))}
       </TabsList>
@@ -201,10 +222,10 @@ function I18nListInput({ value, onChange, disabled }: { value: unknown; onChange
   );
 }
 
-function FieldControl({ f, value, refOptions, onChange, disabled, locale }: { f: FieldSpec; value: unknown; refOptions?: RefOption[]; onChange: (v: unknown) => void; disabled?: boolean; locale: string }) {
+function FieldControl({ f, value, refOptions, onChange, disabled, A }: { f: FieldSpec; value: unknown; refOptions?: RefOption[]; onChange: (v: unknown) => void; disabled?: boolean; A: AdminText }) {
   const t = useTranslations("admin");
-  const label = <span>{tx(f.label, locale)}{f.required && <span className="ms-1 text-danger">*</span>}</span>;
-  const hint = f.help ? tx(f.help, locale) : f.key === "id" ? t("idHint") : undefined;
+  const label = <span>{A.field(f)}{f.required && <span className="ms-1 text-danger">*</span>}</span>;
+  const hint = A.help(f);
   switch (f.type) {
     case "text":
       return <Field label={label} hint={hint}><Input value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value || null)} disabled={disabled} dir="ltr" className="font-en" placeholder={f.placeholder} /></Field>;
@@ -220,7 +241,7 @@ function FieldControl({ f, value, refOptions, onChange, disabled, locale }: { f:
         </Field>
       );
     case "select":
-      return <Field label={label} hint={hint}><Select value={(value as string) ?? undefined} onValueChange={onChange} options={(f.options ?? []).map((o) => ({ value: o.value, label: tx(o.label, locale) }))} disabled={disabled} placeholder="—" /></Field>;
+      return <Field label={label} hint={hint}><Select value={(value as string) ?? undefined} onValueChange={onChange} options={(f.options ?? []).map((v) => ({ value: v, label: A.option(f, v) }))} disabled={disabled} placeholder="—" /></Field>;
     case "ref":
       return <Field label={label} hint={hint}><RefSelect value={value} onChange={onChange} options={refOptions ?? []} required={f.required} disabled={disabled} placeholder="—" /></Field>;
     case "date":
@@ -234,7 +255,7 @@ function FieldControl({ f, value, refOptions, onChange, disabled, locale }: { f:
     case "i18n-list":
       return <Field label={label} hint={hint}><I18nListInput value={value} onChange={onChange} disabled={disabled} /></Field>;
     case "i18n-md":
-      return <Field label={label} hint={hint ?? "Markdown"}><I18nInput value={value} onChange={onChange} long="md" disabled={disabled} /></Field>;
+      return <Field label={label} hint={hint}><I18nInput value={value} onChange={onChange} long="md" disabled={disabled} /></Field>;
     case "steps":
       return <Field label={label} hint={hint}><StepsInput value={value} onChange={onChange} disabled={disabled} /></Field>;
     case "json":
@@ -374,6 +395,7 @@ const asSteps = (v: unknown): Step[] =>
 
 function StepsInput({ value, onChange, disabled }: { value: unknown; onChange: (v: unknown) => void; disabled?: boolean }) {
   const t = useTranslations("admin");
+  const tc = useTranslations("common");
   const [lang, setLang] = React.useState<"fa" | "en">("fa");
   const steps = React.useMemo(() => asSteps(value), [value]);
 
@@ -400,7 +422,7 @@ function StepsInput({ value, onChange, disabled }: { value: unknown; onChange: (
           {(["fa", "en"] as const).map((l) => (
             <TabsTrigger key={l} value={l} className="inline-flex items-center gap-1.5">
               <span className={cn("size-1.5 rounded-full", steps.some((s) => s.title[l]?.trim() || s.body[l]?.trim()) ? "bg-success" : "bg-border")} />
-              {l === "fa" ? "فارسی" : "English"}
+              {tc(`lang.${l}`)}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -448,13 +470,14 @@ function StepsInput({ value, onChange, disabled }: { value: unknown; onChange: (
 }
 
 function JsonField({ label, value, onChange, disabled, help }: { label: React.ReactNode; value: unknown; onChange: (v: unknown) => void; disabled?: boolean; help?: string }) {
+  const t = useTranslations("admin");
   const [text, setText] = React.useState(JSON.stringify(value ?? null, null, 2));
   const [err, setErr] = React.useState<string | null>(null);
   return (
     <Field label={label} hint={help} error={err}>
       <Textarea value={text} dir="ltr" className="min-h-40 font-en text-xs leading-6" disabled={disabled} onChange={(e) => {
         setText(e.target.value);
-        try { onChange(JSON.parse(e.target.value)); setErr(null); } catch { setErr("Invalid JSON"); }
+        try { onChange(JSON.parse(e.target.value)); setErr(null); } catch { setErr(t("invalidJson")); }
       }} />
     </Field>
   );

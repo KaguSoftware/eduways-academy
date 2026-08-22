@@ -36,7 +36,7 @@ export function AdminSidebar({ email, role, hasDb }: { email: string; role: stri
         </nav>
         <div className="space-y-2 border-t border-border p-4 text-xs text-muted">
           <p className="truncate"><span className="me-1">{t("signedInAs")}</span><span className="font-en font-semibold text-foreground" dir="ltr">{email}</span> · {role}</p>
-          <p className="flex items-center gap-1.5"><Database className="size-3.5" />{t("dataSource")}: {hasDb ? "Supabase" : "seed"}</p>
+          <p className="flex items-center gap-1.5"><Database className="size-3.5" />{t("dataSource")}: {hasDb ? t("dataSourceDb") : t("dataSourceSeed")}</p>
           <div className="flex items-center justify-between gap-2 pt-1">
             <Link href="/" className="inline-flex items-center gap-1 hover:text-foreground"><ExternalLink className="size-3.5" />{t("backToSite")}</Link>
             <SignOutButton label={t("signOut")} />

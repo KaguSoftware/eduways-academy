@@ -7,7 +7,8 @@ import { Link } from "@/i18n/navigation";
 import { X, Plus, Check, Minus } from "lucide-react";
 import type { UniversityWithRelations } from "@/lib/types";
 import type { I18nText } from "@/lib/utils";
-import { cn, formatNumber, formatRange, tx } from "@/lib/utils";
+import { cn, formatNumber, tx } from "@/lib/utils";
+import { useMoney } from "@/lib/money";
 import { Select, Empty } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { UniversityLogo, ScoreRing } from "./university-card";
@@ -18,6 +19,7 @@ type Lite = { id: string; slug: string; name: I18nText };
 export function CompareView({ all, initial }: { all: Lite[]; initial: UniversityWithRelations[] }) {
   const t = useTranslations();
   const locale = useLocale();
+  const money = useMoney();
   const router = useRouter();
   const { slugs, toggle, remove } = useCompare();
   const [items, setItems] = React.useState(initial);
@@ -49,7 +51,7 @@ export function CompareView({ all, initial }: { all: Lite[]; initial: University
   const rows: { label: string; render: (u: UniversityWithRelations) => React.ReactNode; best?: (u: UniversityWithRelations) => number }[] = [
     { label: t("universities.type"), render: (u) => t(`common.${u.type}`) },
     { label: t("universities.district"), render: (u) => (u.district ? `${tx(u.district.name, locale)} · ${t(`common.${u.district.side}`)}` : "—") },
-    { label: t("universities.tuitionRange"), render: (u) => formatRange(u.avg_tuition_min, u.avg_tuition_max, locale), best: (u) => -u.avg_tuition_min },
+    { label: t("universities.tuitionRange"), render: (u) => money.range(u.avg_tuition_min, u.avg_tuition_max), best: (u) => -u.avg_tuition_min },
     { label: t("rankings.colRank"), render: (u) => (u.best_rank ? `#${formatNumber(u.best_rank, locale)}` : "—"), best: (u) => -(u.best_rank ?? 999) },
     { label: t("common.score"), render: (u) => <ScoreRing value={u.editorial_score} size={44} />, best: (u) => u.editorial_score },
     { label: t("universities.valueScore"), render: (u) => <ScoreRing value={u.value_score ?? 0} size={44} />, best: (u) => u.value_score ?? 0 },
@@ -57,9 +59,9 @@ export function CompareView({ all, initial }: { all: Lite[]; initial: University
     { label: t("nav.programs"), render: (u) => formatNumber(u.programs.length, locale), best: (u) => u.programs.length },
     { label: t("universities.englishTaught"), render: (u) => formatNumber(u.programs.filter((p) => p.language !== "tr").length, locale), best: (u) => u.programs.filter((p) => p.language !== "tr").length },
     { label: t("universities.studentCount"), render: (u) => (u.student_count ? formatNumber(u.student_count, locale) : "—") },
-    { label: t("universities.intlPct"), render: (u) => (u.intl_student_pct ? `${formatNumber(u.intl_student_pct, locale)}٪` : "—"), best: (u) => u.intl_student_pct ?? 0 },
+    { label: t("universities.intlPct"), render: (u) => (u.intl_student_pct ? `${formatNumber(u.intl_student_pct, locale)}${t("common.percent")}` : "—"), best: (u) => u.intl_student_pct ?? 0 },
     { label: t("universities.dorm"), render: (u) => (u.has_dorm ? yes : no) },
-    { label: t("common.eduwaysDeal"), render: (u) => (u.eduways_discount_pct ? `${t("common.upTo")} ${formatNumber(u.eduways_discount_pct, locale)}٪` : no), best: (u) => u.eduways_discount_pct ?? 0 },
+    { label: t("common.eduwaysDeal"), render: (u) => (u.eduways_discount_pct ? `${t("common.upTo")} ${formatNumber(u.eduways_discount_pct, locale)}${t("common.percent")}` : no), best: (u) => u.eduways_discount_pct ?? 0 },
     { label: t("common.founded"), render: (u) => formatNumber(u.founded, locale, { useGrouping: false }) },
   ];
 
@@ -84,7 +86,7 @@ export function CompareView({ all, initial }: { all: Lite[]; initial: University
                 {items.map((u) => (
                   <th key={u.id} className="px-4 py-4 text-center align-top">
                     <div className="relative mx-auto flex max-w-[220px] flex-col items-center gap-2">
-                      <button onClick={() => del(u.slug)} className="absolute -end-2 -top-2 flex size-7 items-center justify-center rounded-full border border-border bg-background text-muted hover:text-danger focus-ring" aria-label="remove"><X className="size-3.5" /></button>
+                      <button onClick={() => del(u.slug)} className="absolute -end-2 -top-2 flex size-7 items-center justify-center rounded-full border border-border bg-background text-muted hover:text-danger focus-ring" aria-label={t("common.remove")}><X className="size-3.5" /></button>
                       <UniversityLogo name={u.short_name || u.name.en} logo={u.logo_url} size={56} />
                       <Link href={`/universities/${u.slug}`} className="font-bold leading-snug hover:text-brand-700">{tx(u.name, locale)}</Link>
                     </div>

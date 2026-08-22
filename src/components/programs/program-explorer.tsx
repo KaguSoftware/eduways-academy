@@ -6,7 +6,8 @@ import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { ArrowUpRight, ArrowDownAZ, ArrowDownNarrowWide, ArrowUpNarrowWide, GraduationCap } from "lucide-react";
 import type { Program, University, Category, ProgramLevel } from "@/lib/types";
-import { cn, formatNumber, formatRange, formatUSD, tx } from "@/lib/utils";
+import { cn, formatNumber, tx } from "@/lib/utils";
+import { useMoney } from "@/lib/money";
 import { Select, Segmented, Slider, Badge, Empty } from "@/components/ui/primitives";
 import { ProgramSearch, type Suggestion } from "@/components/programs/program-search";
 import { DynamicIcon } from "@/components/home/sections";
@@ -64,6 +65,7 @@ function norm(s: string) {
 export function ProgramExplorer({ programs, categories, universities }: { programs: Row[]; categories: Category[]; universities: Pick<University, "id" | "slug" | "name">[] }) {
   const t = useTranslations();
   const locale = useLocale();
+  const money = useMoney();
   const sp = useSearchParams();
   const [q, setQ] = React.useState(sp.get("q") ?? "");
   const [level, setLevel] = React.useState<"all" | ProgramLevel>((sp.get("level") as never) || "all");
@@ -193,7 +195,7 @@ export function ProgramExplorer({ programs, categories, universities }: { progra
             ]}
           />
         </Filter>
-        <Filter label={t("programs.tuition")} value={isFullRange ? t("common.all") : formatRange(range[0], range[1], locale)}>
+        <Filter label={t("programs.tuition")} value={isFullRange ? t("common.all") : money.range(range[0], range[1])}>
           <Slider value={range} onValueChange={([lo, hi]) => setRange([lo, hi])} min={TUITION_MIN} max={TUITION_MAX} step={500} minStepsBetweenThumbs={1} />
         </Filter>
         {/* Below md these two are dropdowns: the segmented pills overflow a phone's width
@@ -254,7 +256,7 @@ export function ProgramExplorer({ programs, categories, universities }: { progra
                     <td className="hidden px-4 py-3 text-center lg:table-cell"><Badge variant={p.language === "tr-en" ? "purple" : p.language === "tr" ? "warning" : "accent"}>{t(`common.${p.language}` as never)}</Badge></td>
                     {/* the hover arrow is taken out of flow, so only the price is centred under the header */}
                     <td className="relative whitespace-nowrap px-4 py-3 text-center font-bold tabular">
-                      {p.tuition_usd === 0 ? t("common.free") : formatUSD(p.tuition_usd, locale)}
+                      {p.tuition_usd === 0 ? t("common.free") : money.usd(p.tuition_usd)}
                       <Link href={`/universities/${p.university.slug}?tab=programs`} className="absolute inset-y-0 end-2 inline-flex items-center text-muted opacity-0 transition-opacity group-hover:opacity-100" aria-label={t("programs.viewUniversity")}><ArrowUpRight className="size-4 rtl:-scale-x-100" /></Link>
                     </td>
                   </tr>
