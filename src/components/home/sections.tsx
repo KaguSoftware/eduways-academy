@@ -11,6 +11,7 @@ import { UniversityCard, UniversityLogo } from "@/components/university/universi
 import { Button } from "@/components/ui/button";
 import { Badge, Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/primitives";
 import { Reveal } from "@/components/ui/reveal";
+import { ProcessSteps } from "@/components/home/process-steps";
 
 type IconName = keyof typeof Icons;
 export function DynamicIcon({ name, className }: { name: string; className?: string }) {
@@ -102,18 +103,7 @@ export async function ProcessSection() {
   return (
     <section className="container-x py-20">
       <SectionHeader title={t("processTitle")} subtitle={t("processSubtitle")} align="center" />
-      <ol className="relative grid gap-6 md:grid-cols-5">
-        <div className="pointer-events-none absolute inset-x-[10%] top-7 hidden h-0.5 bg-gradient-to-r from-brand-200 via-brand-400 to-accent-400 md:block" />
-        {steps.map((s, i) => (
-          <Reveal key={s.title} delay={i * 0.08}>
-            <li className="relative flex flex-col items-center text-center">
-              <span className="relative z-10 flex size-14 items-center justify-center rounded-full border-4 border-background bg-brand-gradient font-en text-lg font-extrabold text-white shadow-md">{i + 1}</span>
-              <h3 className="mt-4 font-bold">{s.title}</h3>
-              <p className="mt-1.5 text-sm leading-6 text-muted">{s.body}</p>
-            </li>
-          </Reveal>
-        ))}
-      </ol>
+      <ProcessSteps steps={steps} />
     </section>
   );
 }
