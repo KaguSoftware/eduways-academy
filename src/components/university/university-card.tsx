@@ -219,13 +219,19 @@ export function UniversityCard({
                 </div>
                 <div className="relative z-10 flex shrink-0 items-center gap-1.5">
                     {u.best_rank ? (
-                        <Tooltip content={t("rankings.colRank")}>
-                            <span className="inline-flex items-center rounded-full bg-surface px-2 py-1 font-en text-[11px] font-bold text-brand-800 tabular">
+                        <Tooltip content={t("rankings.colRank")} clickable>
+                            <button
+                                type="button"
+                                onClick={(e) => e.preventDefault()}
+                                aria-label={t("rankings.colRank")}
+                                className="inline-flex items-center rounded-full bg-surface px-2 py-1 font-en text-[11px] font-bold text-brand-800 tabular transition-colors hover:bg-brand-50 focus-ring"
+                            >
                                 #{formatNumber(u.best_rank, locale)}
-                            </span>
+                            </button>
                         </Tooltip>
                     ) : null}
                     <Tooltip
+                        clickable
                         content={
                             <ul className="flex flex-col gap-1">
                                 <li>{t(`common.${u.type}`)}</li>

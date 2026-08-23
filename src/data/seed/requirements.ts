@@ -39,14 +39,34 @@ const PHD_COMMON: AdmissionDocument[] = [
   doc("پاسپورت و عکس", "Passport and photos", true),
 ];
 
-const examsPublic = [
-  { name: "YÖS (دانشگاه‌های دولتی / TR-YÖS)", min: "۶۰+/۱۰۰ برای مهندسی، ۸۰+ برای پزشکی", note: { fa: "آزمون استعداد ریاضی/هندسه؛ ایرانی‌ها معمولاً نتایج عالی می‌گیرند", en: "Math/geometry aptitude test; Iranian students typically score very well" } },
-  { name: "SAT", min: "1100+ (1300+ medicine)", note: { fa: "بیشتر دولتی‌ها SAT را هم می‌پذیرند", en: "Most public universities also accept SAT" } },
-  { name: "دیپلم / کنکور ایران", min: "معدل ۱۷+ برای رشته‌های رقابتی", note: { fa: "برخی دانشگاه‌ها رتبه کنکور را هم قبول می‌کنند", en: "Some accept the Iranian Konkur rank" } },
+const examsPublic: AdmissionRequirement["exams"] = [
+  {
+    name: { fa: "YÖS (دانشگاه‌های دولتی / TR-YÖS)", en: "YÖS (public universities / TR-YÖS)" },
+    min: { fa: "۶۰+/۱۰۰ برای مهندسی، ۸۰+ برای پزشکی", en: "60+/100 for engineering, 80+ for medicine" },
+    note: { fa: "آزمون استعداد ریاضی/هندسه؛ ایرانی‌ها معمولاً نتایج عالی می‌گیرند", en: "Math/geometry aptitude test; Iranian students typically score very well" },
+  },
+  {
+    name: { fa: "SAT", en: "SAT" },
+    min: { fa: "۱۱۰۰+ (۱۳۰۰+ برای پزشکی)", en: "1100+ (1300+ medicine)" },
+    note: { fa: "بیشتر دولتی‌ها SAT را هم می‌پذیرند", en: "Most public universities also accept SAT" },
+  },
+  {
+    name: { fa: "دیپلم / کنکور ایران", en: "Iranian diploma / Konkur" },
+    min: { fa: "معدل ۱۷+ برای رشته‌های رقابتی", en: "GPA 17+ for competitive programs" },
+    note: { fa: "برخی دانشگاه‌ها رتبه کنکور را هم قبول می‌کنند", en: "Some accept the Iranian Konkur rank" },
+  },
 ];
-const examsPrivate = [
-  { name: "معدل دیپلم", min: "اغلب بدون حداقل؛ برای پزشکی/دندانپزشکی ۱۷+ و برای بورسیه بالاتر", note: { fa: "اکثر دانشگاه‌های خصوصی فقط با دیپلم پذیرش می‌دهند", en: "Most private universities admit on diploma alone" } },
-  { name: "SAT / YÖS (برای بورسیه)", min: "SAT 1200+ → 25–100% بورسیه", note: { fa: "اختیاری اما برای تخفیف بیشتر مؤثر", en: "Optional but boosts scholarships" } },
+const examsPrivate: AdmissionRequirement["exams"] = [
+  {
+    name: { fa: "معدل دیپلم", en: "High-school GPA" },
+    min: { fa: "اغلب بدون حداقل؛ برای پزشکی/دندانپزشکی ۱۷+ و برای بورسیه بالاتر", en: "Usually no minimum; 17+ for medicine/dentistry and higher for scholarships" },
+    note: { fa: "اکثر دانشگاه‌های خصوصی فقط با دیپلم پذیرش می‌دهند", en: "Most private universities admit on diploma alone" },
+  },
+  {
+    name: { fa: "SAT / YÖS (برای بورسیه)", en: "SAT / YÖS (for scholarships)" },
+    min: { fa: "SAT ۱۲۰۰+ ← بورسیه ۲۵ تا ۱۰۰٪", en: "SAT 1200+ → 25–100% scholarship" },
+    note: { fa: "اختیاری اما برای تخفیف بیشتر مؤثر", en: "Optional but boosts scholarships" },
+  },
 ];
 
 const deadlines = [

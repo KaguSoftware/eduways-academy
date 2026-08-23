@@ -209,6 +209,8 @@
     "compareEmpty": "Pick universities to compare.",
     "compareBar": "{count} selected",
     "compareNow": "Compare now",
+    "compareNeedMore": "Add at least one more university",
+    "compareNeedMoreHint": "You have picked only one university. Choose another one above to see them side by side.",
     "valueScore": "Value score",
     "valueScoreHint": "Tuition vs. national ranking. Higher is better value.",
     "programsIntro": "{count} programs · filter by level, language and field",

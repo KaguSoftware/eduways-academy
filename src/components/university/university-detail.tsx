@@ -176,7 +176,7 @@ function Documents({ u }: { u: UniversityWithRelations }) {
             <h3 className="mb-3 flex items-center gap-2 font-bold"><FileCheck2 className="size-4 text-brand-600" />{t("universities.exams")}</h3>
             <ul className="space-y-3 text-sm">
               {req.exams.map((e, i) => (
-                <li key={i}><p className="font-semibold">{e.name}</p>{e.min && <p className="text-muted">{e.min}</p>}{e.note && <p className="text-xs text-muted">{tx(e.note, locale)}</p>}</li>
+                <li key={i}><p className="font-semibold">{tx(e.name, locale)}</p>{e.min && <p className="text-muted">{tx(e.min, locale)}</p>}{e.note && <p className="text-xs text-muted">{tx(e.note, locale)}</p>}</li>
               ))}
             </ul>
           </div>

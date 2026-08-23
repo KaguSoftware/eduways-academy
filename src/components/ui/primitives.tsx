@@ -352,16 +352,52 @@ export function PopoverContent({ className, ...props }: React.ComponentProps<typ
 export function TooltipProvider(props: React.ComponentProps<typeof RxTooltip.Provider>) {
   return <RxTooltip.Provider delayDuration={200} {...props} />;
 }
-export function Tooltip({ content, children, side }: { content: React.ReactNode; children: React.ReactNode; side?: "top" | "bottom" | "left" | "right" }) {
+/**
+ * `clickable` pins the tooltip open on tap/click so it survives the pointer leaving — the only
+ * way to read one on touch, where Radix never opens on hover. A pinned tooltip closes on the
+ * next activation of the trigger, a pointer-down outside, or Escape. `pinned` is a ref because
+ * Radix's own close callbacks fire in the same tick as our toggle and would read stale state.
+ */
+export function Tooltip({ content, children, side, clickable = false }: { content: React.ReactNode; children: React.ReactNode; side?: "top" | "bottom" | "left" | "right"; clickable?: boolean }) {
+  const [open, setOpen] = React.useState(false);
+  const pinned = React.useRef(false);
+  const pin = (v: boolean) => {
+    pinned.current = v;
+    setOpen(v);
+  };
+  const body = (
+    <RxTooltip.Portal>
+      <RxTooltip.Content
+        side={side}
+        sideOffset={6}
+        onPointerDownOutside={() => pin(false)}
+        onEscapeKeyDown={() => pin(false)}
+        className="z-[100] max-w-xs rounded-xl bg-brand-900 px-3 py-2 text-xs font-medium text-white shadow-lg animate-in fade-in zoom-in-95"
+      >
+        {content}
+        <RxTooltip.Arrow className="fill-brand-900" />
+      </RxTooltip.Content>
+    </RxTooltip.Portal>
+  );
+  if (!clickable) {
+    return (
+      <RxTooltip.Root>
+        <RxTooltip.Trigger asChild>{children}</RxTooltip.Trigger>
+        {body}
+      </RxTooltip.Root>
+    );
+  }
   return (
-    <RxTooltip.Root>
-      <RxTooltip.Trigger asChild>{children}</RxTooltip.Trigger>
-      <RxTooltip.Portal>
-        <RxTooltip.Content side={side} sideOffset={6} className="z-[100] max-w-xs rounded-xl bg-brand-900 px-3 py-2 text-xs font-medium text-white shadow-lg animate-in fade-in zoom-in-95">
-          {content}
-          <RxTooltip.Arrow className="fill-brand-900" />
-        </RxTooltip.Content>
-      </RxTooltip.Portal>
+    <RxTooltip.Root open={open} onOpenChange={(o) => { if (!pinned.current || o) setOpen(o); }}>
+      <RxTooltip.Trigger
+        asChild
+        onPointerDown={() => pin(!pinned.current)}
+        // Keyboard activation (Enter/Space) reports no pointer, so it never fires pointerdown.
+        onClick={(e) => { if (e.detail === 0) pin(!pinned.current); }}
+      >
+        {children}
+      </RxTooltip.Trigger>
+      {body}
     </RxTooltip.Root>
   );
 }

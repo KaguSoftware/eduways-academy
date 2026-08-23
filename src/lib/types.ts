@@ -80,7 +80,7 @@ export interface AdmissionRequirement {
   university_id: string;
   level: ProgramLevel;
   documents: AdmissionDocument[];
-  exams: { name: string; min?: string; note?: I18nText }[];
+  exams: { name: I18nText; min?: I18nText; note?: I18nText }[];
   deadlines: { term: I18nText; date: string }[];
   notes?: I18nText | null;
 }
