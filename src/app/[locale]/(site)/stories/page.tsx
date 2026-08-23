@@ -35,9 +35,9 @@ export default async function StoriesPage({ params }: { params: Promise<{ locale
                 <Quote className="size-7 text-accent-500" />
                 <p className="mt-4 flex-1 text-base leading-8">{tx(s.quote, loc)}</p>
                 <div className="mt-6 flex items-center gap-3 border-t border-border pt-4">
-                  <span className="flex size-11 items-center justify-center rounded-full bg-brand-gradient font-bold text-white">{s.student_name.slice(0, 1)}</span>
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-gradient font-bold text-white">{s.student_name.slice(0, 1)}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="block font-semibold">{s.student_name}</span>
+                    <span className="block truncate font-semibold">{s.student_name}</span>
                     <span className="block truncate text-xs text-muted">{s.university ? tx(s.university.name, loc) : ""} · {tx(s.program, loc)}</span>
                   </span>
                 </div>

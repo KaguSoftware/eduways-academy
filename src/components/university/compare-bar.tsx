@@ -21,13 +21,13 @@ export function CompareBar() {
           transition={{ type: "spring", stiffness: 300, damping: 28 }}
           className="fixed inset-x-0 bottom-5 z-40 flex justify-center px-4 pointer-events-none"
         >
-          <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-border bg-brand-900 py-2 pe-2 ps-4 text-white shadow-lg">
-            <GitCompareArrows className="size-5 text-accent-400" />
-            <span className="text-sm font-semibold">{t("compareBar", { count: slugs.length })}</span>
-            <Button asChild size="sm" variant="primary" className="bg-white text-brand-900 hover:bg-brand-50 shadow-none">
+          <div className="pointer-events-auto flex max-w-full items-center gap-2 rounded-full border border-border bg-brand-900 py-2 pe-2 ps-4 text-white shadow-lg sm:gap-3">
+            <GitCompareArrows className="size-5 shrink-0 text-accent-400" />
+            <span className="min-w-0 flex-1 truncate text-sm font-semibold">{t("compareBar", { count: slugs.length })}</span>
+            <Button asChild size="sm" variant="primary" className="shrink-0 bg-white text-brand-900 hover:bg-brand-50 shadow-none">
               <Link href={{ pathname: "/universities/compare", query: { u: slugs.join(",") } }}>{t("compareNow")}</Link>
             </Button>
-            <button onClick={clear} className="flex size-8 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white focus-ring" aria-label={tc("clear")}><X className="size-4" /></button>
+            <button onClick={clear} className="flex size-8 shrink-0 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white focus-ring" aria-label={tc("clear")}><X className="size-4" /></button>
           </div>
         </motion.div>
       )}

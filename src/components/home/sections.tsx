@@ -190,13 +190,13 @@ export async function StoriesSection({ stories }: { stories: (Story & { universi
         </div>
         <div className="grid gap-5 md:grid-cols-3">
           {stories.slice(0, 3).map((s, i) => (
-            <Reveal key={s.id} delay={i * 0.08}>
+            <Reveal key={s.id} delay={i * 0.08} className="min-w-0">
               <Link href={`/stories/${s.slug}`} className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur transition-colors hover:bg-white/10 focus-ring">
                 <Quote className="size-7 text-accent-400" />
                 <p className="mt-4 flex-1 text-base leading-8">{tx(s.quote, locale)}</p>
                 <div className="mt-6 flex items-center gap-3 border-t border-white/10 pt-4">
-                  <span className="flex size-10 items-center justify-center rounded-full bg-brand-gradient font-bold">{s.student_name.slice(0, 1)}</span>
-                  <span className="min-w-0">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-gradient font-bold">{s.student_name.slice(0, 1)}</span>
+                  <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">{s.student_name}</span>
                     <span className="block truncate text-xs text-white/60">{s.university ? tx(s.university.name, locale) : ""} · {tx(s.program, locale)} · {s.year_enrolled}</span>
                   </span>

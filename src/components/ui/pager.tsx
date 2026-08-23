@@ -19,7 +19,7 @@ export function Pager({ children, perPage = 6, className }: { children: React.Re
   const current = Math.min(page, pages - 1);
   return (
     <>
-      <div className={cn("grid gap-5 md:grid-cols-2 lg:grid-cols-3", className)}>
+      <div className={cn("grid gap-5 md:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0", className)}>
         {items.slice(current * perPage, current * perPage + perPage)}
       </div>
       {pages > 1 && (
