@@ -56,7 +56,13 @@ export function Header() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  React.useEffect(() => setMenuOpen(false), [pathname]);
+  // Close on navigation. The checkbox is the source of truth, so clear it too — otherwise
+  // CSS would keep the panel open after a route change.
+  React.useEffect(() => {
+    setMenuOpen(false);
+    const cb = document.getElementById("mobile-menu-toggle") as HTMLInputElement | null;
+    if (cb) cb.checked = false;
+  }, [pathname]);
 
   // The panel owns the viewport while open; stop the page behind it from scrolling.
   React.useEffect(() => {
@@ -77,6 +83,18 @@ export function Header() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [menuOpen]);
+
+  // iOS Safari freezes `dvh` while the URL bar collapses, so an open panel keeps its old
+  // height and leaves a gap. Publish the live viewport height as `--vvh`; the panel prefers
+  // it and falls back to dvh/vh, so this is enhancement only — never a load-bearing value.
+  React.useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const sync = () => document.documentElement.style.setProperty("--vvh", `${vv.height}px`);
+    sync();
+    vv.addEventListener("resize", sync);
+    return () => vv.removeEventListener("resize", sync);
+  }, []);
 
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
@@ -147,15 +165,42 @@ export function Header() {
           <MobileMenuButton open={menuOpen} onToggle={() => setMenuOpen((o) => !o)} label={t("menu")} />
         </div>
       </div>
-      <MobilePanel open={menuOpen} onNavigate={() => setMenuOpen(false)} isActive={isActive} />
+      {/* CSS source of truth for the panel; React mirrors it via `checked` for side-effects. */}
+      <input
+        type="checkbox"
+        id="mobile-menu-toggle"
+        className="peer sr-only"
+        /* Uncontrolled on purpose: the checkbox toggles instantly via CSS even before
+           hydration, and React follows it rather than gating it. */
+        defaultChecked={false}
+        onChange={(e) => setMenuOpen(e.currentTarget.checked)}
+        aria-hidden
+        tabIndex={-1}
+      />
+      <MobilePanel
+        open={menuOpen}
+        onNavigate={() => {
+          setMenuOpen(false);
+          const cb = document.getElementById("mobile-menu-toggle") as HTMLInputElement | null;
+          if (cb) cb.checked = false;
+        }}
+        isActive={isActive}
+      />
       <CommandSearch open={searchOpen} onOpenChange={setSearchOpen} locale={locale} />
     </header>
   );
 }
 
+/**
+ * The toggle is a <label> for the `#mobile-menu-toggle` checkbox, so opening/closing is
+ * pure CSS (`:checked ~ …`). React only mirrors the state for side-effects (scroll lock,
+ * page blur, close-on-navigate). If hydration is interrupted — an extension mangling the
+ * DOM, a chunk failing to load — the menu still opens and its links still work.
+ */
 function MobileMenuButton({ open, onToggle, label }: { open: boolean; onToggle: () => void; label: string }) {
   return (
-    <Button variant="ghost" size="icon" className="lg:hidden" aria-label={label} aria-expanded={open} onClick={onToggle}>
+    <Button asChild variant="ghost" size="icon" className="lg:hidden">
+      <label htmlFor="mobile-menu-toggle" aria-label={label} aria-expanded={open} role="button" tabIndex={0}>
       {/* Three bars that morph into an X: the outer two rotate onto the centre line,
           the middle one fades. Driven by `open` so it animates both ways. */}
       <span className="relative block size-5" aria-hidden>
@@ -171,6 +216,7 @@ function MobileMenuButton({ open, onToggle, label }: { open: boolean; onToggle: 
           />
         ))}
       </span>
+      </label>
     </Button>
   );
 }
@@ -183,23 +229,15 @@ function MobilePanel({ open, onNavigate, isActive }: { open: boolean; onNavigate
     <div
       id="mobile-menu"
       aria-hidden={!open}
-      className="fixed inset-x-0 bottom-0 top-16 z-40 md:top-[4.5rem] lg:hidden"
-      style={{
-        /* Physical transform, not a `translate-x-*` utility: Tailwind flips those under
-           `dir="rtl"`, which would slide the panel in from the left in Persian. */
-        transform: open ? "translateX(0)" : "translateX(100%)",
-        /* Not `display:none` — that cannot animate. Visibility is delayed on close so the
-           slide-out plays out first, then the panel drops out of hit-testing. */
-        visibility: open ? "visible" : "hidden",
-        transition: "transform 300ms ease-out, visibility 0s linear " + (open ? "0s" : "300ms"),
-      }}
+      data-open={open ? "true" : "false"}
+      className="mobile-panel fixed inset-x-0 top-16 z-40 h-[calc(100vh-4rem)] h-[calc(100dvh-4rem)] h-[calc(var(--vvh,100dvh)-4rem)] md:top-[4.5rem] md:h-[calc(100vh-4.5rem)] md:h-[calc(100dvh-4.5rem)] md:h-[calc(var(--vvh,100dvh)-4.5rem)] lg:hidden"
     >
       {/* Opaque: the page behind is blurred by CSS instead (globals.css → "Mobile menu"),
           so the panel does not need a backdrop-filter of its own. */}
       <div aria-hidden className="absolute inset-0 -z-10 bg-background" />
-      <div className="flex h-full flex-col">
+      <div className="flex h-full min-h-0 flex-col">
         {/* Only the links scroll; the CTA below stays pinned to the bottom of the panel. */}
-        <nav className="flex flex-1 flex-col overflow-y-auto overscroll-contain" aria-label={t("mobile")}>
+        <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain" aria-label={t("mobile")}>
           {[...NAV, ...MORE].map((n, i) => {
             const active = isActive(n.href);
             return (
@@ -207,21 +245,12 @@ function MobilePanel({ open, onNavigate, isActive }: { open: boolean; onNavigate
                 key={n.key}
                 href={n.href}
                 onClick={onNavigate}
-                tabIndex={open ? undefined : -1}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group flex items-center justify-between gap-4 border-b border-border/70 px-6 py-5 text-2xl font-bold tracking-tight transition-colors",
+                  "mobile-link group flex items-center justify-between gap-4 border-b border-border/70 px-6 py-5 text-2xl font-bold tracking-tight transition-colors",
                   active ? "text-brand-700" : "text-foreground hover:text-brand-700",
                 )}
-                style={{
-                  /* Rows fly in one after another, trailing the panel's own slide. Physical
-                     translate (not a utility) so RTL keeps the same right-to-left motion. */
-                  opacity: open ? 1 : 0,
-                  transform: open ? "translateX(0)" : "translateX(2rem)",
-                  transition: open
-                    ? `opacity 220ms ease-out ${80 + i * 35}ms, transform 220ms cubic-bezier(0.22,1,0.36,1) ${80 + i * 35}ms`
-                    : "opacity 120ms ease-in, transform 120ms ease-in",
-                }}
+                style={{ "--i": i } as React.CSSProperties}
               >
                 <span>{t(n.key)}</span>
                 {/* Points the way the reader travels: flipped in RTL. */}
@@ -232,7 +261,7 @@ function MobilePanel({ open, onNavigate, isActive }: { open: boolean; onNavigate
         </nav>
         <div className="shrink-0 bg-background ps-6 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pe-[5.5rem]">
           <Button asChild size="lg" className="w-full">
-            <Link href="/consultation" onClick={onNavigate} tabIndex={open ? undefined : -1} className="rtl:flex-row-reverse">
+            <Link href="/consultation" onClick={onNavigate} className="rtl:flex-row-reverse">
               <Speech className="size-4" />
               {t("consultation")}
             </Link>

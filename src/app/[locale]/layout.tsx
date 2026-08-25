@@ -24,6 +24,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: { default: `${t("siteName")} — ${t("tagline")}`, template: `%s · ${t("siteName")}` },
     description: t("description"),
     applicationName: "Eduways Academy",
+    // iOS Safari otherwise rewrites bare phone numbers into <a href="tel:"> before React
+    // hydrates (x-apple-data-detectors), which breaks hydration and blanks the client tree.
+    formatDetection: { telephone: false, date: false, address: false, email: false },
     openGraph: { type: "website", siteName: "Eduways Academy", locale: locale === "fa" ? "fa_IR" : "en_US", images: ["/brand/logo.jpg"] },
     twitter: { card: "summary_large_image" },
     alternates: { languages: { fa: "/", en: "/en", "x-default": "/" } },

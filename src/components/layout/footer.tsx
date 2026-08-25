@@ -58,8 +58,8 @@ export async function Footer({ settings }: { settings: SiteSettings }) {
           <h3 className="text-sm font-bold uppercase tracking-wider text-brand-900">{t("contact.title")}</h3>
           <ul className="space-y-3 text-sm text-muted">
             <li className="flex items-start gap-2.5"><MapPin className="mt-0.5 size-4 shrink-0 text-brand-600" /><span>{tx(settings.address, locale)}</span></li>
-            <li className="flex items-start gap-2.5"><MessageCircle className="mt-0.5 size-4 shrink-0 text-brand-600" /><span className="font-en" dir="ltr">+{settings.whatsapp_number}</span></li>
-            {settings.email && <li className="flex items-start gap-2.5"><Mail className="mt-0.5 size-4 shrink-0 text-brand-600" /><span className="font-en">{settings.email}</span></li>}
+            <li className="flex items-start gap-2.5"><MessageCircle className="mt-0.5 size-4 shrink-0 text-brand-600" /><a href={`tel:+${settings.whatsapp_number}`} className="font-en transition-colors hover:text-brand-700" dir="ltr">+{settings.whatsapp_number}</a></li>
+            {settings.email && <li className="flex items-start gap-2.5"><Mail className="mt-0.5 size-4 shrink-0 text-brand-600" /><a href={`mailto:${settings.email}`} className="font-en transition-colors hover:text-brand-700">{settings.email}</a></li>}
           </ul>
           <p className="text-xs text-muted">{t("contact.hoursValue")}</p>
         </div>

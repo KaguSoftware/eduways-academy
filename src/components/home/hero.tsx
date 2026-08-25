@@ -47,7 +47,10 @@ export function Hero({ stats }: { stats: SiteSettings["stats"] }) {
               {t.rich("home.heroTitle", { accent: (c) => <span className="text-brand-600">{c}</span> })}
             </motion.h1>
 
-            <motion.form variants={rise} onSubmit={submit} className="mt-7 max-w-xl">
+            {/* Password managers / autofill extensions stamp attributes (e.g. __gcruniqueid) onto
+                forms and inputs before React hydrates; suppress the resulting attribute-mismatch
+                warning, which is client-side noise we cannot control. */}
+            <motion.form variants={rise} onSubmit={submit} className="mt-7 max-w-xl" suppressHydrationWarning>
               <label htmlFor="hero-major" className="flex items-center gap-2 text-sm font-bold text-brand-950">
                 {t("home.finderQuestionMajor")}
               </label>
@@ -55,6 +58,7 @@ export function Hero({ stats }: { stats: SiteSettings["stats"] }) {
                 <span className="ms-3 text-muted"><Search className="size-5" /></span>
                 <input
                   id="hero-major"
+                  suppressHydrationWarning
                   value={major}
                   onChange={(e) => setMajor(e.target.value)}
                   placeholder={t("home.finderMajorPlaceholder")}

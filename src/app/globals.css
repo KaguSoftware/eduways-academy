@@ -206,6 +206,51 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 @keyframes collapsible-down { from { height: 0; opacity: 0; } to { height: var(--radix-collapsible-content-height); opacity: 1; } }
 @keyframes collapsible-up { from { height: var(--radix-collapsible-content-height); opacity: 1; } to { height: 0; opacity: 0; } }
 
+/* ---------- Mobile menu panel ----------
+   Driven by `data-open` on the panel, not inline styles, so the open/closed state is
+   plain CSS. Links default to visible + tappable and the stagger is a pure enhancement:
+   if the entrance animation never runs (hydration interrupted, reduced motion, an
+   extension mangling the DOM), the menu is still fully usable rather than a blank panel
+   of invisible links. */
+.mobile-panel {
+  transform: translateX(100%);
+  /* `visibility: hidden` also removes the offscreen links from the tab order and from
+     hit-testing, so no JS-managed tabIndex is needed (which could desync from CSS). */
+  visibility: hidden;
+  transition: transform 300ms ease-out, visibility 0s linear 300ms;
+}
+.mobile-panel[data-open="true"],
+/* CSS-only path: works before/without hydration, so the menu can never be dead. */
+#mobile-menu-toggle:checked ~ .mobile-panel {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform 300ms ease-out, visibility 0s linear 0s;
+}
+/* Base state is the FINAL state — visible and hit-testable. Note `backwards`, NOT
+   `both`: `both` also holds the FINAL keyframe, but more importantly a stalled or
+   never-started animation must never leave a row stuck at opacity 0. Rows are painted
+   and tappable by default; the animation only replays the entrance on top of that. */
+.mobile-link { opacity: 1; transform: none; }
+/* Only while the panel is open do we replay the entrance, per-row via --i. */
+.mobile-panel[data-open="true"] .mobile-link,
+#mobile-menu-toggle:checked ~ .mobile-panel .mobile-link {
+  animation: mobile-link-in 220ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(80ms + var(--i, 0) * 35ms);
+}
+/* Safety net: if animations are unavailable or interrupted, force the visible state. */
+@supports not (animation-name: mobile-link-in) {
+  .mobile-link { opacity: 1 !important; transform: none !important; animation: none !important; }
+}
+@keyframes mobile-link-in {
+  from { opacity: 0; transform: translateX(2rem); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-panel { transition: none; }
+  .mobile-panel[data-open="true"] .mobile-link,
+  #mobile-menu-toggle:checked ~ .mobile-panel .mobile-link { animation: none; }
+}
+
 /* ---------- Mobile menu: blur the page behind the panel ----------
    Only `main`/`footer` are blurred — never a shared ancestor of the header, since the
    menu panel lives inside <header> and would be blurred along with the page.
@@ -220,6 +265,15 @@ body[data-menu-open="true"] .site-shell > footer {
   filter: blur(8px);
   opacity: 0.6;
   /* The page is inert while the menu owns the screen. */
+  pointer-events: none;
+}
+/* CSS-only path, so the blur tracks the menu even before hydration. Kept as its OWN rule:
+   a browser without `:has()` support discards the entire selector list it appears in, which
+   would take the `data-menu-open` rule above down with it. */
+body:has(#mobile-menu-toggle:checked) .site-shell > main,
+body:has(#mobile-menu-toggle:checked) .site-shell > footer {
+  filter: blur(8px);
+  opacity: 0.6;
   pointer-events: none;
 }
 @media (prefers-reduced-motion: reduce) {
